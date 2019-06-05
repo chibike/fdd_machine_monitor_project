@@ -1,5 +1,5 @@
-# django_project_template
-Basic Django Template Complete with Admin and User Login
+# Machine Monitor
+This is the UI for a machine monitor
 
 ### Dependencies ###
 

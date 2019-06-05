@@ -8,8 +8,9 @@ from django.urls import reverse
 from django.views import View
 from django_tables2 import RequestConfig
 
-from basic_app.forms import LoginForm, ChangePasswordForm, UserFilterFormHelper, NewUserForm
-from basic_app.tables import UserTable
+from basic_app.forms import LoginForm, ChangePasswordForm, UserFilterFormHelper, NewUserForm, NewDeviceForm, DeviceFilterFormHelper
+from basic_app.tables import UserTable, AdminDeviceTable
+from basic_app.models import Device
 from basic_app import support_functions
 from basic_app import filters
 
@@ -58,7 +59,7 @@ class ChangePasswordView(LoginRequiredMixin, View):
 class AdminView(support_functions.TestIsSuperuser, View):
     @staticmethod
     def get(request, card='users'):
-        card_list = ['users']
+        card_list = ['users', 'devices']
         card = card if card in card_list else 'users'
 
         parameters = {
@@ -73,11 +74,38 @@ class AdminView(support_functions.TestIsSuperuser, View):
             table = UserTable(user_filter.qs)
             template = 'basic_app/html/admin_users.html'
             parameters['filter'] = user_filter
-        
+        elif card == 'devices':
+            device_list = Device.objects.all()
+            device_filter = filters.DeviceFilter(request.GET, queryset=device_list)
+            device_filter.form.helper = DeviceFilterFormHelper()
+            table = AdminDeviceTable(device_filter.qs)
+            template = 'basic_app/html/admin_devices.html'
+            parameters['filter'] = device_filter
 
         RequestConfig(request, paginate={'per_page': 10}).configure(table)
         parameters['table'] = table
         return render(request, template, parameters)
+
+class NewDeviceView(support_functions.TestIsSuperuser, View):
+    @staticmethod
+    def get(request):
+        new_device_form = NewDeviceForm
+        return render(request, 'basic_app/html/new_device.html', {'new_device_form': new_device_form})
+
+    @staticmethod
+    def post(request):
+        new_device_form = NewDeviceForm(request.POST)
+        if new_device_form.is_valid():
+            new_device_form.save()
+        else:
+            return render(request, 'basic_app/html/new_device.html', {'new_device_form': new_device_form})
+        return redirect(reverse('admin', args=['devices']))
+
+class DeleteDeviceView(support_functions.TestIsSuperuser, View):
+    @staticmethod
+    def post(request, id):
+        Device.objects.get(id=id).delete()
+        return redirect(reverse('admin', args=['devices']))
 
 class AuthView(View):
     @staticmethod
@@ -122,6 +150,11 @@ class EditUserView(support_functions.TestIsSuperuser, View):
         else:
             return render(request, 'basic_app/html/new_user.html', {'new_user_form': edit_user_form})
         return redirect(reverse('admin'))
+
+class DashboardView(LoginRequiredMixin, View):
+    @staticmethod
+    def get(request, highlight=None):
+        return render(request, 'basic_app/html/dashboard.html')
 
 # class DashboardView(LoginRequiredMixin, View):
 #     @staticmethod

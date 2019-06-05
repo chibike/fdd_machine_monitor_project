@@ -27,7 +27,20 @@
         });
 
         $(function() {
-            $('#content').addClass('mt-10');
+            $('.edit_device_tag').on('click', function() {
+                const name = $(this).data('name');
+                const id = $(this).data('id');
+                const action = $(this).data('action');
+                $('#edit_device_modal_title').text('Confirm deletion');
+                $('#edit_device_modal_body').html('Are you sure you want to delete user: <b>' + name + '</b>');
+                $('#edit_device_modal_submit').val('Delete');
+                $('#edit_device_modal_id').val(id);
+                $('#edit_device_modal_form').attr('action', action);
+            });
+        });
+
+        $(function() {
+            $('#content').addClass('mt-5');
         });
     </script>
 {% endblock %}

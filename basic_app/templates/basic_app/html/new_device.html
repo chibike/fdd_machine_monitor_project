@@ -1,5 +1,5 @@
-{% extends "basic_app/html/includes/_basic_layout.html" %}
-{% load django_tables2 %}
+{% extends "basic_app/html/includes/_basic_layout_no_nav.html" %}
+{% load crispy_forms_tags %}
 {% load static %}
 
 {% block header %}
@@ -10,6 +10,7 @@
     <div class="justify-content-center h-100 d-flex my-auto">
         <div  class="my-auto">
             <img class="w-280 mb-3 mt-3" src="{% static 'icons/icon.png' %}">
+            {% crispy new_device_form %}
         </div>
     </div>
 {% endblock %}

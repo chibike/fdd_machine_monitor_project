@@ -8,9 +8,6 @@
         <li class="nav-item">
             <a class="nav-link {% if active_card == 'devices' %}active{% endif %}" href="{% url 'admin' 'devices' %}">Devices</a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link {% if active_card == 'auth_certs' %}active{% endif %}" href="{% url 'admin' 'auth_certs' %}">Authorisation Certificates</a>
-        </li>
     </ul>
     {% block admin_table %}{% endblock %}
 {% endblock %}
@@ -18,7 +15,7 @@
 {% block scripts %}
     <script>
         $(function() {
-            $('#content').addClass('mt-10');
+            $('#content').addClass('mt-5');
         });
     </script>
 {% endblock %}

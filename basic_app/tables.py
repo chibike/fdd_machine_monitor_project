@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from django_tables2 import tables
 from django_tables2.tables import columns
 
-# from basic_app.models import _
+from basic_app.models import Device
 import random
 
 class UserTable(tables.Table):
@@ -39,4 +39,26 @@ class UserTable(tables.Table):
         model = User
         sequence = ('id', 'username', 'first_name', 'last_name', 'email', 'is_superuser', 'action')
         fields = ('id', 'username', 'first_name', 'last_name', 'email', 'is_superuser', 'action')
+        attrs = {'class': 'table table-striped'}
+
+
+class AdminDeviceTable(tables.Table):
+    id = columns.Column(verbose_name='#')
+    read_pipe = columns.Column(verbose_name='Read Pipe Key', empty_values=())
+    write_pipe = columns.Column(verbose_name='Write Pipe Key', empty_values=())
+    action = columns.Column(verbose_name='Action', empty_values=(), orderable=False)
+
+    @staticmethod
+    def render_action(record):
+        return format_html(
+            render_to_string('basic_app/html/cells/admin_device_action.html',
+                             {
+                                 'id': record.id,
+                                 'action': reverse('delete_device', args=[record.id]),
+                                 'edit': reverse('edit_device', args=[record.id]),
+                             }))
+
+    class Meta:
+        model = Device
+        sequence = ('id', 'read_pipe', 'write_pipe', 'action')
         attrs = {'class': 'table table-striped'}

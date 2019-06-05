@@ -2,6 +2,8 @@ import django_filters as filters
 from django.contrib.auth.models import User
 from django.db.models import Q
 
+from basic_app.models import Device
+
 class UserFilter(filters.FilterSet):
     SUPERUSER_CHOICES = {
         (True, 'Superusers'),
@@ -21,3 +23,12 @@ class UserFilter(filters.FilterSet):
     class Meta:
         model = User
         fields = ['name', 'is_superuser']
+
+class DeviceFilter(filters.FilterSet):
+    id = filters.CharFilter(lookup_expr='icontains')
+    read_pipe  = filters.CharFilter(lookup_expr='icontains')
+    write_pipe = filters.CharFilter(lookup_expr='icontains')
+    
+    class Meta:
+        model = Device
+        fields = ['id', 'read_pipe', 'write_pipe']

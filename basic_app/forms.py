@@ -7,6 +7,8 @@ from django.core.exceptions import ValidationError
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit, Layout, Div, Field, ButtonHolder, Fieldset
 
+from basic_app.models import Device
+
 class LoginForm(forms.Form):
     username = forms.CharField(label='username', max_length=50)
     password = forms.CharField(label='password', max_length=50, widget=forms.PasswordInput)
@@ -177,3 +179,44 @@ class NewUserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'is_superuser', 'password']
+
+class NewDeviceForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(NewDeviceForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+
+        self.helper.layout = Layout(
+            Div(
+                Field('id', css_class='form-control w-280', placeholder='0'), css_class='form-group'
+            ),
+            Div(
+                Field('read_pipe', css_class='form-control w-280', placeholder='Read Pipe'), css_class='form-group'
+            ),
+            Div(
+                Field('write_pipe', css_class='form-control w-280', placeholder='Write Pipe'), css_class='form-group'
+            ),
+            Submit('submit', 'Create', css_class='btn btn-primary w-280')
+            )
+
+    def save(self, commit=True):
+        instance = super(NewDeviceForm, self).save(commit=False)
+        if commit:
+            instance.save()
+        return instance
+
+    class Meta:
+        model = Device
+        fields = ['id', 'read_pipe', 'write_pipe']
+
+class DeviceFilterFormHelper(FormHelper):
+    _form_method = 'GET'
+    form_class = 'form-inline float-left'
+    form_show_labels = False
+    layout = Layout(
+        Field('id', placeholder='Device ID', css_class='mr-2'),
+        Field('read_pipe', placeholder='Read Pipe', css_class='mr-2'),
+        Field('write_pipe', placeholder='Write Pipe', css_class='mr-2'),
+        ButtonHolder(
+            Submit('submit', 'Apply filters')
+        )
+    )
