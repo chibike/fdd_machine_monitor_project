@@ -1,0 +1,24 @@
+{% extends "basic_app/html/includes/_basic_layout.html" %}
+
+{% block content %}
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link {% if active_card == 'users' %}active{% endif %}" href="{% url 'admin' 'users' %}">Users</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_card == 'devices' %}active{% endif %}" href="{% url 'admin' 'devices' %}">Devices</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_card == 'auth_certs' %}active{% endif %}" href="{% url 'admin' 'auth_certs' %}">Authorisation Certificates</a>
+        </li>
+    </ul>
+    {% block admin_table %}{% endblock %}
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(function() {
+            $('#content').addClass('mt-10');
+        });
+    </script>
+{% endblock %}

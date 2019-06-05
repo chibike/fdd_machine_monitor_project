@@ -1,0 +1,38 @@
+{% load static %}
+<div id="navbar">
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}"><img style="width: 50px" src="{% static 'icons/icon_white.png' %}" alt="Project Brand"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    {% if request.user.is_superuser %}
+                        <li class="nav-item {% if active_nav == 'admin' %}active{% endif %}">
+                            <a class="nav-link" href="{% url 'admin' %}">Administrator panel</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item {% if active_nav == 'index' %}active{% endif %}">
+                            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                        </li>
+                    {% endif %}
+                    {% if request.user.is_authenticated %}
+                        <li class="nav-item {% if active_nav == 'change_password' %}active{% endif %}">
+                            <a class="nav-link" href="{% url 'change_password' %}">Change password <span class="sr-only">(current)</span></a>
+                        </li>
+                        <li class="nav-item">
+                            <a id="logout_button" class="nav-link" href="#">Logout</a>
+                            <div class="d-none">
+                                <form action="{% url 'logout' %}" method="post" id="logout_form">
+                                    {% csrf_token %}
+                                    <input type="button" value="submit" name="Logout"/>
+                                </form>
+                            </div>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>

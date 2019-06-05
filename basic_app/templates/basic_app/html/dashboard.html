@@ -1,0 +1,45 @@
+{% extends "basic_app/html/includes/_basic_layout.html" %}
+{% load django_tables2 %}
+{% block content %}
+    {% if not has_certificate %}
+        <div class="alert alert-danger">You do not have Authorisation Certificate.</div>
+    {% else %}
+        {% render_table table %}
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(function () {
+            function updateStatus() {
+                $.ajax({
+                    type: 'GET',
+                    url: {% url 'update_dashboard' %},
+                    async: true,
+                    complete: function () {
+                        setTimeout(function () {
+                            updateStatus();
+                        }, 5000);
+                    },
+                    success: function (data) {
+                        $.each(data, function(key, val) {
+                            $('#status_' + key).removeClass('glyphicon-green-dot').removeClass('glyphicon-grey-dot').addClass(val);
+                            if (val === 'glyphicon-green-dot') {
+                                $('#rkm_' + key).show();
+                                $('#actions_' + key).show();
+                            } else {
+                                $('#rkm_' + key).hide();
+                                $('#actions' + key).hide();
+                            }
+                        })
+                    }
+                });
+            }
+            updateStatus();
+        });
+
+        $(function() {
+            $('#content').addClass('mt-10');
+        });
+    </script>
+{% endblock %}

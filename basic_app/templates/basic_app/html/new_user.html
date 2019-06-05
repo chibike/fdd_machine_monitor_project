@@ -1,0 +1,15 @@
+{% extends "basic_app/html/includes/_basic_layout.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <div class="row justify-content-center h-100 d-flex my-auto">
+        {% crispy new_user_form %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(function() {
+            $('#content').addClass('mt-5');
+        });
+    </script>
+{% endblock %}

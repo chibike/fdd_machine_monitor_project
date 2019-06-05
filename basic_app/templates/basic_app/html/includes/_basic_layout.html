@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    {% include 'basic_app/html/includes/_header.html' %}
+    
+    {% block header %}
+    {% endblock %}
+</head>
+
+<body>
+    {% block body %}
+
+        {% include 'basic_app/html/includes/_basic_nav.html' %}
+        
+        <div id="content" class="container">
+            {% block content %}
+            <span>Hello, world</span>
+            {% endblock %}
+        </div>
+        
+        {% include 'basic_app/html/includes/_footer.html' %}
+        <script>
+            $(function() {
+                $('#logout_button').on('click', function() {
+                    $('#logout_form').submit();
+                })
+            })
+        </script>
+
+        {% block footer %}
+        {% endblock %}
+        
+        {% block scripts %}
+        {% endblock %}
+
+    {% endblock %}
+</body>

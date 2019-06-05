@@ -1,0 +1,33 @@
+{% extends "basic_app/html/admin_panel.html" %}
+{% load django_tables2 crispy_forms_tags %}
+
+{% block admin_table %}
+    <div style="padding-top: 12px">
+        {% crispy filter.form %}
+        <a href="{% url 'new_user' %}" class="float-right"><button type="button" class="btn btn-primary">Create new</button></a>
+
+    </div>
+    {% render_table table %}
+    {% include 'basic_app/html/_modal.html' %}
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(function() {
+            $('.delete_tag').on('click', function() {
+                const name = $(this).data('name');
+                const id = $(this).data('id');
+                const action = $(this).data('action');
+                $('#confirm_modal_title').text('Confirm deletion');
+                $('#confirm_modal_body').html('Are you sure you want to delete user: <b>' + name + '</b>');
+                $('#confirm_modal_submit').val('Delete');
+                $('#confirm_modal_id').val(id);
+                $('#confirm_modal_form').attr('action', action);
+            });
+        });
+
+        $(function() {
+            $('#content').addClass('mt-10');
+        });
+    </script>
+{% endblock %}

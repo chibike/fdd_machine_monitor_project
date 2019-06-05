@@ -1,0 +1,25 @@
+{% extends "basic_app/html/includes/_basic_layout.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block header %}
+<link href="{% static 'basic_app/css/fullscreen_body.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="justify-content-center h-100 d-flex my-auto">
+        <div  class="my-auto">
+            <img class="w-280 mb-3" src="{% static 'icons/icon.png' %}">
+            {% crispy login_form %}
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(function() {
+            $('#content').addClass('h-100');
+        });
+    </script>
+{% endblock %}
