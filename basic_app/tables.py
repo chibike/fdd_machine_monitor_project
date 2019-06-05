@@ -50,13 +50,22 @@ class AdminDeviceTable(tables.Table):
 
     @staticmethod
     def render_action(record):
-        return format_html(
-            render_to_string('basic_app/html/cells/admin_device_action.html',
-                             {
-                                 'id': record.id,
-                                 'action': reverse('delete_device', args=[record.id]),
-                                 'edit': reverse('edit_device', args=[record.id]),
-                             }))
+        return format_html('''<a href="#" class="delete_tag"
+                  data-toggle="modal"
+                  data-target="#confirm_modal"
+                  data-id="{0}"
+                  data-action="{1}">Delete</a> |
+                  <a href="{2}">Edit</a>''',
+                           record.id,
+                           reverse('delete_device', args=[record.id]),
+                           reverse('edit_device', args=[record.id]))
+        # return format_html(
+        #     render_to_string('basic_app/html/cells/admin_device_action.html',
+        #                      {
+        #                          'id': record.id,
+        #                          'action': reverse('delete_device', args=[record.id]),
+        #                          'edit_device': reverse('edit_device', args=[record.id]),
+        #                      }))
 
     class Meta:
         model = Device

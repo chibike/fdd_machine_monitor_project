@@ -25,12 +25,12 @@ class LoginForm(forms.Form):
 
         self.helper.layout = Layout(
             Div(
-                Field('username', css_class='form-control w-280', placeholder='Username'), css_class='form-group'
+                Field('username', css_class='form-control w-100', placeholder='Username'), css_class='form-group'
             ),
             Div(
-                Field('password', css_class='form-control w-280', placeholder='Password'), css_class='form-group'
+                Field('password', css_class='form-control w-100', placeholder='Password'), css_class='form-group'
             ),
-            Submit('submit', 'Log in!', css_class='btn btn-primary w-280')
+            Submit('submit', 'Log in!', css_class='btn btn-primary w-100')
         )
 
     def clean(self):
@@ -61,12 +61,12 @@ class ChangePasswordForm(forms.Form):
 
         self.helper.layout = Layout(
             Div(
-                Field('password', css_class='form-control w-280', placeholder='New Password'), css_class='form-group'
+                Field('password', css_class='form-control w-100', placeholder='New Password'), css_class='form-group'
             ),
             Div(
-                Field('confirm_password', css_class='form-control w-280', placeholder='Confirm Password'), css_class='form-group'
+                Field('confirm_password', css_class='form-control w-100', placeholder='Confirm Password'), css_class='form-group'
             ),
-            Submit('submit', 'Change', css_class='btn btn-primary w-280')
+            Submit('submit', 'Change', css_class='btn btn-primary w-100')
         )
 
         # self.helper.layout = Layout(
@@ -122,26 +122,37 @@ class NewUserForm(forms.ModelForm):
         self.helper = FormHelper(self)
 
         self.helper.layout = Layout(
-            Fieldset(
-                'Register new user',
-                'username',
-                'first_name',
-                'last_name',
-                'email',
-                'password',
-                'confirm_password',
-                'is_superuser'
+            Div(
+                Field('username', css_class='form-control w-100', placeholder='Username'), css_class='form-group'
             ),
-            ButtonHolder(
-                Submit('submit', 'Save')
-            ))
+            Div(
+                Field('first_name', css_class='form-control w-100', placeholder='First Name'), css_class='form-group'
+            ),
+            Div(
+                Field('last_name', css_class='form-control w-100', placeholder='Last Name'), css_class='form-group'
+            ),
+            Div(
+                Field('email', css_class='form-control w-100', placeholder='Email'), css_class='form-group'
+            ),
+            Div(
+                Field('password', css_class='form-control w-100', placeholder='Password'), css_class='form-group'
+            ),
+            Div(
+                Field('confirm_password', css_class='form-control w-100', placeholder='Confirm Password'), css_class='form-group'
+            ),
+            Div(
+                Field('is_superuser')
+            ),
+            Submit('submit', 'Save', css_class='btn btn-primary w-100')
+            
+            )
         self.edit_mode = self.instance.id is not None
 
         if self.edit_mode:
             self.fields['password'].required = False
             self.fields['confirm_password'].required = False
             self.initial['password'] = ''
-            self.fields['password'].help_text = 'Leave empty if you don\' want to change password.'
+            self.fields['password'].help_text = 'Leave empty if you don\'t want to change password.'
 
     def clean(self):
         username = self.cleaned_data.get('username')
@@ -186,16 +197,16 @@ class NewDeviceForm(forms.ModelForm):
         self.helper = FormHelper(self)
 
         self.helper.layout = Layout(
-            Div(
-                Field('id', css_class='form-control w-280', placeholder='0'), css_class='form-group'
-            ),
-            Div(
-                Field('read_pipe', css_class='form-control w-280', placeholder='Read Pipe'), css_class='form-group'
-            ),
-            Div(
-                Field('write_pipe', css_class='form-control w-280', placeholder='Write Pipe'), css_class='form-group'
-            ),
-            Submit('submit', 'Create', css_class='btn btn-primary w-280')
+                Div(
+                    Field('id', css_class='form-control w-100', placeholder='0'), css_class='form-group'
+                ),
+                Div(
+                    Field('read_pipe', css_class='form-control w-100', placeholder='Read Pipe'), css_class='form-group'
+                ),
+                Div(
+                    Field('write_pipe', css_class='form-control w-100', placeholder='Write Pipe'), css_class='form-group'
+                ),
+                Submit('submit', 'Save', css_class='btn btn-primary w-100')
             )
 
     def save(self, commit=True):

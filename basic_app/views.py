@@ -107,6 +107,25 @@ class DeleteDeviceView(support_functions.TestIsSuperuser, View):
         Device.objects.get(id=id).delete()
         return redirect(reverse('admin', args=['devices']))
 
+class EditDeviceView(support_functions.TestIsSuperuser, View):
+    @staticmethod
+    def get(request, id):
+        device = Device.objects.get(pk=id)
+        edit_device_form = NewDeviceForm(instance=device)
+        return render(request, 'basic_app/html/new_device.html', {'new_device_form': edit_device_form})
+
+    @staticmethod
+    def post(request, id):
+        device = Device.objects.get(pk=id)
+        edit_device_form = NewDeviceForm(request.POST, instance=device)
+        if edit_device_form.is_valid():
+            print("Yeah")
+            edit_device_form.save()
+        else:
+            print("Ooooh")
+            return render(request, 'basic_app/html/new_device.html', {'new_device_form': edit_device_form})
+        return redirect(reverse('admin'))
+
 class AuthView(View):
     @staticmethod
     def post(request):
