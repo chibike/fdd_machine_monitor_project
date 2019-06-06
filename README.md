@@ -81,4 +81,16 @@ To Start the Server
 python manage.py runserver 0:8000
 ```
 
+### Setting Up Google APIs Consoler ###
+
+1. Go to the Google APIs Console
+2. Create a new project
+3. Click Enable API. Search for enable the Google Drive API
+4. Create credentails for a Web Server to access Application Data
+5. Name the service account and grant it a Project Role of Editor
+6. Download the JSON file
+7. Copy the JSON file to your code directory and rename it to client_secret.json
+
+This was written using the documentation provided on [https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html](https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html)
+
 ### Code Structure ###
