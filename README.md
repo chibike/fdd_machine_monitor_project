@@ -93,4 +93,6 @@ python manage.py runserver 0:8000
 
 This was written using the documentation provided on [https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html](https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html)
 
+also look into this [http://www.indjango.com/access-google-sheets-in-python-using-gspread/](http://www.indjango.com/access-google-sheets-in-python-using-gspread/)
+
 ### Code Structure ###
