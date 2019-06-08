@@ -11,6 +11,42 @@ vscode/*
 *credentials*/
 *credentials*/*
 
+# for py-spidev
+__pycache__/
+*.py[cod]
+dist/
+sdist/
+env/
+build/
+develop-eggs/
+eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+
+pip-log.txt
+pip-delete-this-directory.txt
+
+# RF24 modules
+*.bak
+*.o
+.*.swp
+*.orig
+.swp
+ojam/
+out/
+16000000/
+8000000/
+out_native/
+version.h
+Session.vim
+*.so
+*.so.*
+*.dylib
+*.dylib.*
+.DS_Store
+Makefile.inc
+
 
 # User-specific stuff
 .idea/**/workspace.xml
