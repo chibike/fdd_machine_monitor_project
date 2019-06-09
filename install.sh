@@ -7,6 +7,7 @@ sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libns
 sudo apt install -y software-properties-common apt-transport-https
 sudo apt install -y git-core python3 python3-pip python-dev python3-dev
 sudo apt install -y libboost1.62-all-dev
+sudo apt install -y python-rpi.gpio python3-rpi.gpio
 
 cd /usr/lib/arm-linux-gnueabihf/
 # sudo find libboost_python-py35.so / | grep libboost_python-py35
