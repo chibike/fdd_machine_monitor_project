@@ -8,6 +8,9 @@
         <li class="nav-item">
             <a class="nav-link {% if active_card == 'devices' %}active{% endif %}" href="{% url 'admin' 'devices' %}">Devices</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_card == 'machine_usage' %}active{% endif %}" href="{% url 'admin' 'machine_usage' %}">Usage</a>
+        </li>
     </ul>
     {% block admin_table %}{% endblock %}
 {% endblock %}

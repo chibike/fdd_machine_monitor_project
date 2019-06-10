@@ -8,9 +8,9 @@ from django.urls import reverse
 from django.views import View
 from django_tables2 import RequestConfig
 
-from basic_app.forms import LoginForm, ChangePasswordForm, UserFilterFormHelper, NewUserForm, NewDeviceForm, DeviceFilterFormHelper
-from basic_app.tables import UserTable, AdminDeviceTable
-from basic_app.models import Device
+from basic_app.forms import LoginForm, ChangePasswordForm, UserFilterFormHelper, NewUserForm, NewDeviceForm, DeviceFilterFormHelper, MachineUsageFilterFormHelper, NewMachineEntryForm
+from basic_app.tables import UserTable, AdminDeviceTable, MachineUsageTable
+from basic_app.models import Device, MachineUsage
 from basic_app import support_functions
 from basic_app import filters
 
@@ -59,7 +59,7 @@ class ChangePasswordView(LoginRequiredMixin, View):
 class AdminView(support_functions.TestIsSuperuser, View):
     @staticmethod
     def get(request, card='users'):
-        card_list = ['users', 'devices']
+        card_list = ['users', 'devices', 'machine_usage']
         card = card if card in card_list else 'users'
 
         parameters = {
@@ -81,6 +81,13 @@ class AdminView(support_functions.TestIsSuperuser, View):
             table = AdminDeviceTable(device_filter.qs)
             template = 'basic_app/html/admin_devices.html'
             parameters['filter'] = device_filter
+        elif card == 'machine_usage':
+            usage_list = MachineUsage.objects.all()
+            usage_filter = filters.MachineUsageFilter(request.GET, queryset=usage_list)
+            usage_filter.form.helper =  MachineUsageFilterFormHelper()
+            table = MachineUsageTable(usage_filter.qs)
+            template = 'basic_app/html/admin_machine_usage.html'
+            parameters['filter'] = usage_filter
 
         RequestConfig(request, paginate={'per_page': 10}).configure(table)
         parameters['table'] = table
@@ -90,7 +97,7 @@ class NewDeviceView(support_functions.TestIsSuperuser, View):
     @staticmethod
     def get(request):
         new_device_form = NewDeviceForm
-        return render(request, 'basic_app/html/new_device.html', {'new_device_form': new_device_form})
+        return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_device_form})
 
     @staticmethod
     def post(request):
@@ -98,7 +105,7 @@ class NewDeviceView(support_functions.TestIsSuperuser, View):
         if new_device_form.is_valid():
             new_device_form.save()
         else:
-            return render(request, 'basic_app/html/new_device.html', {'new_device_form': new_device_form})
+            return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_device_form})
         return redirect(reverse('admin', args=['devices']))
 
 class DeleteDeviceView(support_functions.TestIsSuperuser, View):
@@ -112,7 +119,7 @@ class EditDeviceView(support_functions.TestIsSuperuser, View):
     def get(request, id):
         device = Device.objects.get(pk=id)
         edit_device_form = NewDeviceForm(instance=device)
-        return render(request, 'basic_app/html/new_device.html', {'new_device_form': edit_device_form})
+        return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_device_form})
 
     @staticmethod
     def post(request, id):
@@ -123,7 +130,7 @@ class EditDeviceView(support_functions.TestIsSuperuser, View):
             edit_device_form.save()
         else:
             print("Ooooh")
-            return render(request, 'basic_app/html/new_device.html', {'new_device_form': edit_device_form})
+            return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_device_form})
         return redirect(reverse('admin'))
 
 class AuthView(View):
@@ -136,7 +143,7 @@ class NewUserView(support_functions.TestIsSuperuser, View):
     @staticmethod
     def get(request):
         new_user_form = NewUserForm
-        return render(request, 'basic_app/html/new_user.html', {'new_user_form': new_user_form})
+        return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_user_form})
 
     @staticmethod
     def post(request):
@@ -144,7 +151,7 @@ class NewUserView(support_functions.TestIsSuperuser, View):
         if new_user_form.is_valid():
             new_user_form.save()
         else:
-            return render(request, 'basic_app/html/new_user.html', {'new_user_form': new_user_form})
+            return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_user_form})
         return redirect(reverse('admin'))
 
 class DeleteUserView(support_functions.TestIsSuperuser, View):
@@ -158,7 +165,7 @@ class EditUserView(support_functions.TestIsSuperuser, View):
     def get(request, id):
         user = User.objects.get(pk=id)
         edit_user_form = NewUserForm(instance=user)
-        return render(request, 'basic_app/html/new_user.html', {'new_user_form': edit_user_form})
+        return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_user_form})
 
     @staticmethod
     def post(request, id):
@@ -167,7 +174,61 @@ class EditUserView(support_functions.TestIsSuperuser, View):
         if edit_user_form.is_valid():
             edit_user_form.save()
         else:
-            return render(request, 'basic_app/html/new_user.html', {'new_user_form': edit_user_form})
+            return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_user_form})
+        return redirect(reverse('admin'))
+
+class NewMachineUsageView(support_functions.TestIsSuperuser, View):
+    @staticmethod
+    def get(request):
+        new_machine_usage_entry_form = NewMachineEntryForm
+        return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_machine_usage_entry_form})
+
+    @staticmethod
+    def post(request):
+        new_machine_usage_entry_form = NewMachineEntryForm(request.POST)
+        if new_machine_usage_entry_form.is_valid():
+            new_machine_usage_entry_form.save()
+        else:
+            return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_machine_usage_entry_form})
+        return redirect(reverse('admin'))
+
+class EditMachineUsageView(support_functions.TestIsSuperuser, View):
+    @staticmethod
+    def get(request, id):
+        machine_usage_entry = MachineUsage.objects.get(pk=id)
+        edit_machine_usage_entry_form = NewMachineEntryForm(instance=machine_usage_entry)
+        return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_machine_usage_entry_form})
+
+    @staticmethod
+    def post(request, id):
+        machine_usage_entry = MachineUsage.objects.get(pk=id)
+        edit_machine_usage_entry_form = NewMachineEntryForm(request.POST, instance=machine_usage_entry)
+        if edit_machine_usage_entry_form.is_valid():
+            edit_machine_usage_entry_form.save()
+        else:
+            return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_machine_usage_entry_form})
+        return redirect(reverse('admin'))
+
+class DownloadMachineUsageView(support_functions.TestIsSuperuser, View):
+    @staticmethod
+    def get(request):
+        new_machine_usage_entry_form = NewMachineEntryForm
+        return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_machine_usage_entry_form})
+
+    @staticmethod
+    def post(request):
+        new_machine_usage_entry_form = NewMachineEntryForm(request.POST)
+        if new_machine_usage_entry_form.is_valid():
+            new_machine_usage_entry_form.save()
+        else:
+            return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_machine_usage_entry_form})
+        return redirect(reverse('admin'))
+
+
+class DeleteMachineUsageView(support_functions.TestIsSuperuser, View):
+    @staticmethod
+    def post(request, id):
+        MachineUsage.objects.get(pk=id).delete()
         return redirect(reverse('admin'))
 
 class DashboardView(LoginRequiredMixin, View):
@@ -193,6 +254,18 @@ class DashboardView(LoginRequiredMixin, View):
 #         device_ids = [ownership.device.id for ownership in user.ownership_set.all()]
 #         return JsonResponse(support_functions.get_js_for_device_status(device_ids))
 
+def error_403(request, exception=None):
+    data = {}
+    return render(request, '403.html', data)
+
+def error_404(request, exception=None):
+    data = {}
+    return render(request, '404.html', data)
+
+def error_500(request, exception=None):
+    data = {}
+    return render(request, '500.html', data)
+
+
 def dummy_function(request):
     raise Http404("Oops! This page has not been implemented")
-    return HttpResponse("Oops! This page has not been implemented")
