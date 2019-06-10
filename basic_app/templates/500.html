@@ -1,0 +1,27 @@
+{% extends "basic_app/html/includes/_basic_layout.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block header %}
+<link href="{% static 'basic_app/css/fullscreen_body.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="justify-content-center h-100 d-flex my-auto">
+        <div class="justify-content-center text-center my-auto">
+            <a href="/"><img class="w-280 mb-3 mt-3" src="{% static 'icons/icon.png' %}"></a>
+            <div class="mt-5">
+                <h2>Error 500</h2>
+                <p>Oops there has been an error.</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(function() {
+            $('#content').addClass('h-100');
+        });
+    </script>
+{% endblock %}

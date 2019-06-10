@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from django_tables2 import tables
 from django_tables2.tables import columns
 
-from basic_app.models import Device
+from basic_app.models import Device, MachineUsage
 import random
 
 class UserTable(tables.Table):
@@ -70,4 +70,35 @@ class AdminDeviceTable(tables.Table):
     class Meta:
         model = Device
         sequence = ('id', 'read_pipe', 'write_pipe', 'action')
+        fields = ('id', 'read_pipe', 'write_pipe', 'action')
+        attrs = {'class': 'table table-striped'}
+
+
+
+class MachineUsageTable(tables.Table):
+    user = columns.Column(verbose_name="User", empty_values=())
+    device = columns.Column(verbose_name="Device", empty_values=())
+    time_on = columns.Column(verbose_name="Time On", empty_values=(), orderable=False)
+    time_off = columns.Column(verbose_name="Time Off", empty_values=(), orderable=False)
+    total_time = columns.Column(verbose_name="Total Time", empty_values=(), orderable=False)
+    action = columns.Column(verbose_name='Action', empty_values=(), orderable=False)
+
+    @staticmethod
+    def render_action(record):
+        return format_html('''<a href="#" class="delete_tag"
+                  data-toggle="modal"
+                  data-target="#confirm_modal"
+                  data-id="{0}"
+                  data-name="Device {1}"
+                  data-action="{2}">Delete</a> |
+                  <a href="{3}">Edit</a>''',
+                           record.id,
+                           record.device_id,
+                           reverse('delete_machine_usage_entry', args=[record.id]),
+                           reverse('edit_machine_usage_entry', args=[record.id]))
+
+    class Meta:
+        model = MachineUsage
+        sequence = ('user', 'device', 'time_on', 'time_off', 'total_time', 'action')
+        fields =  ('user', 'device', 'time_on', 'time_off', 'total_time', 'action')
         attrs = {'class': 'table table-striped'}

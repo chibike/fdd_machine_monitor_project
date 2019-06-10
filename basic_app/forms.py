@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit, Layout, Div, Field, ButtonHolder, Fieldset
 
-from basic_app.models import Device
+from basic_app.models import Device, MachineUsage
 
 class LoginForm(forms.Form):
     username = forms.CharField(label='username', max_length=50)
@@ -227,6 +227,53 @@ class DeviceFilterFormHelper(FormHelper):
         Field('id', placeholder='Device ID', css_class='mr-2'),
         Field('read_pipe', placeholder='Read Pipe', css_class='mr-2'),
         Field('write_pipe', placeholder='Write Pipe', css_class='mr-2'),
+        ButtonHolder(
+            Submit('submit', 'Apply filters')
+        )
+    )
+
+class NewMachineEntryForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(NewMachineEntryForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+
+        self.helper.layout = Layout(
+                Div(
+                    Field('user', css_class='form-control w-100'), css_class='form-group'
+                ),
+                Div(
+                    Field('device', css_class='form-control w-100'), css_class='form-group'
+                ),
+                Div(
+                    Field('time_on', css_class='form-control w-100'), css_class='form-group'
+                ),
+                Div(
+                    Field('time_off', css_class='form-control w-100'), css_class='form-group'
+                ),
+                Div(
+                    Field('total_time', css_class='form-control w-100'), css_class='form-group'
+                ),
+                Submit('submit', 'Save', css_class='btn btn-primary w-100')
+            )
+
+    def save(self, commit=True):
+        instance = super(NewMachineEntryForm, self).save(commit=False)
+        if commit:
+            instance.save()
+        return instance
+
+    class Meta:
+        model = MachineUsage
+        fields = ['user', 'device', 'time_on', 'time_off', 'total_time']
+
+class MachineUsageFilterFormHelper(FormHelper):
+    _form_method = 'GET'
+    form_class = 'form-inline float-left'
+    form_show_labels = False
+
+    layout = Layout(
+        Field('user', placeholder="User", css_class='mr-2'),
+        Field('device', placeholder="Device", css_class='mr-2'),
         ButtonHolder(
             Submit('submit', 'Apply filters')
         )
