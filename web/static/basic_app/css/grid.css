@@ -1,0 +1,56 @@
+#main-canvas {
+    margin: auto;
+    display: block;
+    border: 4px solid #000000;
+}
+
+#main-container{
+    padding-top: 20px;
+}
+
+#colors-map-1 {
+    float: right;
+}
+
+.column {
+    float: left;
+    width: 50%;
+}
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+#colors-map-1{
+    float: right;
+    padding-left: 0;
+    padding-right: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+#colors-map-2 {
+    float: left;
+    padding-left: 50px;
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+#next-data-wrapper {
+    margin-top: 4%;
+    float: right;
+}
+
+#previous-data-wrapper {
+    margin-top: 4%;
+    float: left;
+}
+
+.btn-quantum-puf {
+    width: 200px;
+}

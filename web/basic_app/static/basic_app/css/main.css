@@ -1,0 +1,36 @@
+/* html, body {
+    height: 100%;
+} */
+
+.w-280 {
+    width: 280px;
+}
+
+.mt-10{
+    margin-top: 8em;
+}
+
+#navbar {
+    margin-bottom: 8px;
+}
+
+.table th {
+    border-top: none;
+}
+
+span[class*="glyphicon"] {
+    margin-bottom: -.8em;
+    overflow: hidden;
+}
+.glyphicon-grey-dot:before {
+    content:"\25cf";
+    color: #8f8f8f;
+}
+.glyphicon-green-dot:before {
+    content:"\25cf";
+    color: #18ba22;
+}
+
+.icon {
+    width: 12px;
+}
