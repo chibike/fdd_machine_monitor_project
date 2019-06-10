@@ -14,6 +14,42 @@ from basic_app.models import Device, MachineUsage
 from basic_app import support_functions
 from basic_app import filters
 
+from device_manager import device_manager
+
+device_node_manager = device_manager.DeviceManager()
+device_node_manager.initialize()
+device_node_manager.print_details()
+
+def device_statechange_callback_handler(device):
+    print ("{name} is {state}".format(name=device.name, state=device.get_state()))
+
+    timestamp = device.get_timestamp()
+
+    try:
+        _user = User.objects.filter(id__exact=device.get_user())[-1][0]
+    except:
+        _user = User.objects.all()[0]
+
+    _device = Device.objects.filter(id__exact=device.name.split(" ")[-1])[0]
+
+    _usage = MachineUsage(user=_user, device=_device, time_on=timestamp["time_on"], time_off=timestamp["time_off"], total_time=timestamp["total_time"])
+    _usage.save()
+
+def load_devices():
+    print ("loading your devices")
+    device_node_manager.clear_devices()
+    devices = Device.objects.all()
+
+    for device in devices:
+        _device = device_manager.Device(str(device))
+        _device.initialize(pipe_a=eval(device.read_pipe), pipe_b=eval(device.write_pipe))
+        _device.add_state_change_callback("cb", device_statechange_callback_handler)
+        device_node_manager.add_device(str(device), _device)
+
+load_devices()
+device_node_manager.run()
+
+
 class IndexView(AccessMixin, View):
     @staticmethod
     def get(request):
@@ -104,6 +140,7 @@ class NewDeviceView(support_functions.TestIsSuperuser, View):
         new_device_form = NewDeviceForm(request.POST)
         if new_device_form.is_valid():
             new_device_form.save()
+            load_devices()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_device_form})
         return redirect(reverse('admin', args=['devices']))
@@ -112,6 +149,7 @@ class DeleteDeviceView(support_functions.TestIsSuperuser, View):
     @staticmethod
     def post(request, id):
         Device.objects.get(id=id).delete()
+        load_devices()
         return redirect(reverse('admin', args=['devices']))
 
 class EditDeviceView(support_functions.TestIsSuperuser, View):
@@ -126,10 +164,9 @@ class EditDeviceView(support_functions.TestIsSuperuser, View):
         device = Device.objects.get(pk=id)
         edit_device_form = NewDeviceForm(request.POST, instance=device)
         if edit_device_form.is_valid():
-            print("Yeah")
             edit_device_form.save()
+            load_devices()
         else:
-            print("Ooooh")
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_device_form})
         return redirect(reverse('admin'))
 

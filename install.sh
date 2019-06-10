@@ -13,7 +13,7 @@ cd /usr/lib/arm-linux-gnueabihf/
 # sudo find libboost_python-py35.so / | grep libboost_python-py35
 sudo ln -s libboost_python-py35.so libboost_python3.so
 
-cd $INSTALL_DIR/fdd_machine_monitor_project/py-spidev
+cd $INSTALL_DIR/py-spidev
 make
 sudo make install
 

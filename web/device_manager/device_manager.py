@@ -8,6 +8,8 @@ import threading
 from RF24 import *
 import RPi.GPIO as GPIO
 
+from django.utils import timezone
+
 DEFAULT_PIPE_A = 0xC2C2C2C2C2
 DEFAULT_PIPE_B = 0xE2E2E2E2E2
 
@@ -30,7 +32,7 @@ class RadioManager(object):
         self._radio.setPALevel(RF24_PA_MAX)
         self._radio.setDataRate(RF24_1MBPS)
         self._radio.setAutoAck(1)
-        self._radio.setRetries(2,15)
+        self._radio.setRetries(2, 15)
         self._radio.setCRCLength(RF24_CRC_8)
 
         self._radio.powerUp()
@@ -96,8 +98,8 @@ class Device(object):
 
         self.__user = None
         self.__state = False
-        self.__time_on = datetime.datetime.now()
-        self.__time_off = datetime.datetime.now()
+        self.__time_on = timezone.now() #datetime.datetime.now()
+        self.__time_off = timezone.now() #datetime.datetime.now()
         self.__total_time = self.__time_off - self.__time_on
 
         self.__state_change_callbacks = dict()
@@ -139,6 +141,8 @@ class Device(object):
         if not (d.startswith("{") and d.endswith("}")):
             return False
         
+        # print ("d: {}".format(d))
+        
         self.set_state(user=int(d[2]), state=int(d[1]))
         return True
     
@@ -163,7 +167,7 @@ class Device(object):
         if self.__state == state and self.__user == user:
             return
 
-        current_time = datetime.datetime.now()
+        current_time = timezone.now() #datetime.datetime.now()
 
         # handle case when device remains on -- but switches user
         if self.__state and self.__user != user:
@@ -181,9 +185,9 @@ class Device(object):
         self.__state = state
 
         if self.__state:
-            self.__time_on = datetime.datetime.now()
+            self.__time_on = timezone.now() #datetime.datetime.now()
         else:
-            self.__time_off = datetime.datetime.now()
+            self.__time_off = timezone.now() #datetime.datetime.now()
             self.__total_time = self.__time_off - self.__time_on
         
         self.do_callbacks()
@@ -192,11 +196,13 @@ class Device(object):
         for callback in self.__state_change_callbacks.values():
             if not callable(callback):
                 continue
+            
+            callback(self)
 
-            try:    
-                callback(self)
-            except:
-                pass
+            # try:    
+            #     callback(self)
+            # except:
+            #     pass
     
     def get_state(self):
         return self.__state
@@ -234,11 +240,17 @@ class DeviceManager(object):
         self.__should_run = True
 
     def terminate(self):
-        self.__should_run = False
-        time.sleep(1)
+        self.kill()
 
         self.__radio_manager.terminate()
         self.__radio_manager = None
+    
+    def clear_devices(self):
+        self.__devices = dict()
+    
+    def kill(self):
+        self.__should_run = False
+        time.sleep(1)
 
     def print_details(self):
         self.__radio_manager.print_details()
@@ -264,7 +276,7 @@ class DeviceManager(object):
         for device in self.__devices.values():
             device.update(self.__radio_manager)
         
-    def run(self, block=False, loop_interval=0.5):
+    def run(self, block=False, loop_interval=0.2):
 
         def __thread(interval):
             while self.__should_run:
