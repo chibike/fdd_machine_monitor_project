@@ -96,3 +96,7 @@ This was written using the documentation provided on [https://www.twilio.com/blo
 also look into this [http://www.indjango.com/access-google-sheets-in-python-using-gspread/](http://www.indjango.com/access-google-sheets-in-python-using-gspread/)
 
 ### Code Structure ###
+
+
+### Useful Site ###
+[https://raspberry-valley.azurewebsites.net/RaspAP-Wifi-Hotspot/](https://raspberry-valley.azurewebsites.net/RaspAP-Wifi-Hotspot/)
