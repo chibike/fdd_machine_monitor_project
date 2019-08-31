@@ -13,7 +13,10 @@ SECRET_KEY = 'lzrc+xm^^k)ole_#r+dd-0s)!yiqwko#0semgh-_&5jq!&kqla'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', '10.3.141.1', '*']
+ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', '10.3.141.1']
+
+if DEBUG:
+    ALLOWED_HOSTS.append('*')
 
 
 # Application definition
