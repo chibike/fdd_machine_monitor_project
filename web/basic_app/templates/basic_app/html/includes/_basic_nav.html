@@ -19,11 +19,16 @@
                 {% endif %}
             </ul>
             <form class="form-inline my-2 my-lg-0" action="{% url 'logout' %}" method="post" id="logout_form">
-                {% if request.user.is_authenticated %}
-                    <a class="nav-link my-2 my-sm-0 mr-3" href="{% url 'change_password' %}">Change password</a>
-                    {% csrf_token %}
-                    <button class="nav-link my-2 my-sm-0" type="submit" name="Logout">Logout</button>
-                {% endif %}
+                <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                    {% if request.user.is_authenticated %}
+                        <li class="nav-item {% if active_nav == 'admin' %}active{% endif %}">
+                            <a class="nav-link my-2 my-sm-0 mr-3" href="{% url 'change_password' %}">Change password</a>
+                        </li>
+                        <li class="nav-item ">
+                            <button class="nav-link my-2 my-sm-0" type="submit" name="Logout">Logout</button>
+                        </li>
+                    {% endif %}
+                </ul>
             </form>
         </div>
     </nav>    
