@@ -2,7 +2,7 @@ from django.http import Http404
 from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, FileResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
@@ -13,8 +13,11 @@ from basic_app.tables import UserTable, AdminDeviceTable, MachineUsageTable
 from basic_app.models import Device, MachineUsage
 from basic_app import support_functions
 from basic_app import filters
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.utils.decorators import method_decorator
 
 from device_manager import device_manager
+import pandas as pd
 
 device_node_manager = device_manager.DeviceManager()
 device_node_manager.initialize()
@@ -54,7 +57,7 @@ class IndexView(AccessMixin, View):
     @staticmethod
     def get(request):
         if request.user.is_authenticated:
-            return redirect(reverse('dashboard'))
+            return redirect(reverse('admin'))
         login_form = LoginForm
         return render(request, 'basic_app/html/login.html', {'login_form': login_form, 'active_nav': 'index'})
 
@@ -67,10 +70,8 @@ class IndexView(AccessMixin, View):
                 redirect_uri = request.GET.get(self.get_redirect_field_name(), None)
                 if redirect_uri:
                     return redirect(redirect_uri)
-                if user.is_superuser:
-                    return redirect(reverse('admin'))
-                else:
-                    return redirect(reverse('dashboard'))
+                
+                return redirect(reverse('admin'))
         return render(request, "basic_app/html/login.html", {'login_form': login_form, 'active_nav': 'index'})
 
 
@@ -90,9 +91,9 @@ class ChangePasswordView(LoginRequiredMixin, View):
         else:
             return render(request, 'basic_app/html/change_password.html', {'change_password_form': change_password_form,
                                                                  'active_nav': 'change_password'})
-        return redirect(reverse('dashboard'))
+        return redirect(reverse('admin'))
 
-class AdminView(support_functions.TestIsSuperuser, View):
+class AdminView(support_functions.IsAuthenticated, View):
     @staticmethod
     def get(request, card='users'):
         card_list = ['users', 'devices', 'machine_usage']
@@ -129,7 +130,7 @@ class AdminView(support_functions.TestIsSuperuser, View):
         parameters['table'] = table
         return render(request, template, parameters)
 
-class NewDeviceView(support_functions.TestIsSuperuser, View):
+class NewDeviceView(support_functions.IsAuthenticated, View):
     @staticmethod
     def get(request):
         new_device_form = NewDeviceForm
@@ -145,14 +146,14 @@ class NewDeviceView(support_functions.TestIsSuperuser, View):
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_device_form})
         return redirect(reverse('admin', args=['devices']))
 
-class DeleteDeviceView(support_functions.TestIsSuperuser, View):
+class DeleteDeviceView(support_functions.IsAuthenticated, View):
     @staticmethod
     def post(request, id):
         Device.objects.get(id=id).delete()
         load_devices()
         return redirect(reverse('admin', args=['devices']))
 
-class EditDeviceView(support_functions.TestIsSuperuser, View):
+class EditDeviceView(support_functions.IsAuthenticated, View):
     @staticmethod
     def get(request, id):
         device = Device.objects.get(pk=id)
@@ -170,13 +171,33 @@ class EditDeviceView(support_functions.TestIsSuperuser, View):
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_device_form})
         return redirect(reverse('admin'))
 
-class AuthView(View):
+@method_decorator(csrf_exempt, name='dispatch')
+class LogoutView(View):
     @staticmethod
     def post(request):
         logout(request)
         return redirect(reverse('index'))
 
-class NewUserView(support_functions.TestIsSuperuser, View):
+@method_decorator(csrf_exempt, name='dispatch')
+class DownloadMachineUsageView(support_functions.IsAuthenticated, View):
+    @staticmethod
+    def get(request):
+        filename = "machine_usage.csv"
+        df = pd.DataFrame(list(MachineUsage.objects.all().values()))
+        df.to_csv(filename)
+        
+        response = FileResponse(open(filename, 'rb'), content_type="application/csv")
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+        return response
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ResetUsageDatabase(support_functions.IsAuthenticated, View):
+    @staticmethod
+    def get(request):
+        MachineUsage.objects.all().delete()
+        return redirect('/admin/machine_usage')
+
+class NewUserView(support_functions.IsAuthenticated, View):
     @staticmethod
     def get(request):
         new_user_form = NewUserForm
@@ -189,15 +210,15 @@ class NewUserView(support_functions.TestIsSuperuser, View):
             new_user_form.save()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_user_form})
-        return redirect(reverse('admin'))
+        return redirect('/admin/users')
 
-class DeleteUserView(support_functions.TestIsSuperuser, View):
+class DeleteUserView(support_functions.IsAuthenticated, View):
     @staticmethod
     def post(request, id):
         User.objects.get(pk=id).delete()
-        return redirect(reverse('admin'))
+        return redirect('/admin/users')
 
-class EditUserView(support_functions.TestIsSuperuser, View):
+class EditUserView(support_functions.IsAuthenticated, View):
     @staticmethod
     def get(request, id):
         user = User.objects.get(pk=id)
@@ -212,9 +233,9 @@ class EditUserView(support_functions.TestIsSuperuser, View):
             edit_user_form.save()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_user_form})
-        return redirect(reverse('admin'))
+        return redirect('/admin/users')
 
-class NewMachineUsageView(support_functions.TestIsSuperuser, View):
+class NewMachineUsageView(support_functions.IsAuthenticated, View):
     @staticmethod
     def get(request):
         new_machine_usage_entry_form = NewMachineEntryForm
@@ -227,9 +248,9 @@ class NewMachineUsageView(support_functions.TestIsSuperuser, View):
             new_machine_usage_entry_form.save()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_machine_usage_entry_form})
-        return redirect(reverse('admin'))
+        return redirect('/admin/machine_usage')
 
-class EditMachineUsageView(support_functions.TestIsSuperuser, View):
+class EditMachineUsageView(support_functions.IsAuthenticated, View):
     @staticmethod
     def get(request, id):
         machine_usage_entry = MachineUsage.objects.get(pk=id)
@@ -244,52 +265,13 @@ class EditMachineUsageView(support_functions.TestIsSuperuser, View):
             edit_machine_usage_entry_form.save()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_machine_usage_entry_form})
-        return redirect(reverse('admin'))
+        return redirect('/admin/machine_usage')
 
-class DownloadMachineUsageView(support_functions.TestIsSuperuser, View):
-    @staticmethod
-    def get(request):
-        new_machine_usage_entry_form = NewMachineEntryForm
-        return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_machine_usage_entry_form})
-
-    @staticmethod
-    def post(request):
-        new_machine_usage_entry_form = NewMachineEntryForm(request.POST)
-        if new_machine_usage_entry_form.is_valid():
-            new_machine_usage_entry_form.save()
-        else:
-            return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_machine_usage_entry_form})
-        return redirect(reverse('admin'))
-
-
-class DeleteMachineUsageView(support_functions.TestIsSuperuser, View):
+class DeleteMachineUsageView(support_functions.IsAuthenticated, View):
     @staticmethod
     def post(request, id):
         MachineUsage.objects.get(pk=id).delete()
-        return redirect(reverse('admin'))
-
-class DashboardView(LoginRequiredMixin, View):
-    @staticmethod
-    def get(request, highlight=None):
-        return render(request, 'basic_app/html/dashboard.html')
-
-# class DashboardView(LoginRequiredMixin, View):
-#     @staticmethod
-#     def get(request, highlight=None):
-#         user = request.user
-#         ownership_list = user.ownership_set.all()
-#         table = OwnershipTable(ownership_list)
-#         has_certificate = True # has_certificate = hasattr(user, 'authorisationcertificate')
-#         RequestConfig(request, paginate={'per_page': 10}).configure(table)
-#         return render(request, 'basic_app/html/dashboard.html', {'table': table, 'has_certificate': has_certificate})
-
-
-# class UpdateDashboard(LoginRequiredMixin, View):
-#     @staticmethod
-#     def get(request):
-#         user = request.user
-#         device_ids = [ownership.device.id for ownership in user.ownership_set.all()]
-#         return JsonResponse(support_functions.get_js_for_device_status(device_ids))
+        return rredirect('/admin/machine_usage')
 
 def error_403(request, exception=None):
     data = {}

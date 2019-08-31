@@ -12,6 +12,12 @@ class TestIsSuperuser(UserPassesTestMixin):
 
     raise_exception = True
 
+class IsAuthenticated(UserPassesTestMixin):
+    def test_func(self):
+        return is_authenticated(self.request.user)
+
+    raise_exception = True
+
 
 def get_logged_users() -> list:
     sessions = Session.objects.filter(expire_date__gte=timezone.now())

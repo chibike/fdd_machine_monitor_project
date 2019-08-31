@@ -2,6 +2,14 @@
     height: 100%;
 } */
 
+.w-img-form {
+    width: 150px;
+}
+
+.h-img-form {
+    height: 150px;
+}
+
 .w-280 {
     width: 280px;
 }

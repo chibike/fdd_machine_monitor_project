@@ -7,12 +7,34 @@
 {% endblock %}
 
 {% block content %}
-    <div class="justify-content-center h-100 d-flex my-auto">
-        <div  class="my-auto">
-            <img class="w-280 mb-3 mt-3" src="{% static 'icons/icon.png' %}">
-            {% crispy create_new_form %}
+<div class="w-100 h-100 d-flex justify-content-center">
+    <div class="my-auto">
+        <div class="card" style="min-width: 20rem;">
+            <div class="card-img-top card-header d-flex justify-content-center"><a href="{% url 'index' %}"><img class="w-img-form h-img-form my-auto" src="{% static 'icons/icon.png' %}"></a></div>
+            <div class="card-body">
+                {% crispy create_new_form %}
+            </div>
         </div>
     </div>
+</div>
+
+<!-- <div class="w-100 h-100 d-flex">
+    <div class="row my-auto w-100">
+        <div class="col-md-6 col-sm-12">
+            <div class="w-100 h-100 d-flex align-items-center">
+                <a href="{% url 'index' %}"><img class="w-img-form h-img-form my-auto" src="{% static 'icons/icon.png' %}"></a>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-sm-12">
+            <div class="w-100 h-100 d-flex justify-content-center">
+                <div class="my-auto">{% crispy create_new_form %}</div>
+            </div>
+        </div>
+    </div>
+</div> -->
+    <!-- <div class="justify-content-center h-100 d-flex my-auto">
+    </div> -->
 {% endblock %}
 
 {% block scripts %}

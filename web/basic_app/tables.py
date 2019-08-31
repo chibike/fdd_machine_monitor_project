@@ -12,7 +12,7 @@ import random
 class UserTable(tables.Table):
     action = columns.Column(orderable=False, verbose_name='Action', empty_values=())
     id = columns.Column(verbose_name='#')
-    is_superuser = columns.Column(verbose_name='Superuser')
+    # is_superuser = columns.Column(verbose_name='Superuser')
 
     @staticmethod
     def render_is_superuser(record):
@@ -37,8 +37,10 @@ class UserTable(tables.Table):
 
     class Meta:
         model = User
-        sequence = ('id', 'username', 'first_name', 'last_name', 'email', 'is_superuser', 'action')
-        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'is_superuser', 'action')
+        # sequence = ('id', 'username', 'first_name', 'last_name', 'email', 'is_superuser', 'action')
+        sequence = ('id', 'username', 'first_name', 'last_name', 'email', 'action')
+        # fields = ('id', 'username', 'first_name', 'last_name', 'email', 'is_superuser', 'action')
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'action')
         attrs = {'class': 'table table-striped'}
 
 
