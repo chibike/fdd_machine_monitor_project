@@ -15,6 +15,7 @@ urlpatterns = [
     path('admin/', AdminView.as_view(), name='admin'),
     path('dummy_function', dummy_function, name='dummy_function'),
     path('new_user/', NewUserView.as_view(), name='new_user'),
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('logout/', AuthView.as_view(), name='logout'),
     path('delete_user/<int:id>', DeleteUserView.as_view(), name='delete_user'),
     path('edit_user/<int:id>', EditUserView.as_view(), name='edit_user'),
