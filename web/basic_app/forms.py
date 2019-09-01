@@ -3,11 +3,12 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit, Layout, Div, Field, ButtonHolder, Fieldset
 
-from basic_app.models import Device, MachineUsage
+from basic_app.models import Device, MachineUsage, GoogleSheet
 
 class LoginForm(forms.Form):
     username = forms.CharField(label='username', max_length=50)
@@ -274,6 +275,50 @@ class MachineUsageFilterFormHelper(FormHelper):
     layout = Layout(
         Field('user', placeholder="User", css_class='mr-2'),
         Field('device', placeholder="Device", css_class='mr-2'),
+        ButtonHolder(
+            Submit('submit', 'Apply filters')
+        )
+    )
+# title = forms.CharField(max_length=50)
+    # file = forms.FileField()
+class NewGoogleSheetEntryForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(NewGoogleSheetEntryForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+
+        self.helper.layout = Layout(
+                Div(
+                    Field('user', css_class='form-control w-100'), css_class='form-group'
+                ),
+                Div(
+                    Field('filename', css_class='form-control w-100'), css_class='form-group'
+                ),
+                Field('credentials', css_class='form-control w-100')
+                ,
+                Submit('submit', 'Save', css_class='btn btn-primary w-100')
+            )
+
+    def save(self, commit=True):
+        instance = super(NewGoogleSheetEntryForm, self).save(commit=False)
+        if commit:
+            instance.save()
+        return instance
+
+    class Meta:
+        model = GoogleSheet
+        fields = ['user', 'filename', 'credentials']
+        labels = {
+            'filename': _('Google Sheet Name'),
+        }
+
+class GoogleSheetEntryFormHelper(FormHelper):
+    _form_method = 'GET'
+    form_class = 'form-inline float-left'
+    form_show_labels = False
+
+    layout = Layout(
+        Field('user', placeholder="User", css_class='mr-2'),
+        Field('filename', placeholder="Google Sheet Name", css_class='mr-2'),
         ButtonHolder(
             Submit('submit', 'Apply filters')
         )

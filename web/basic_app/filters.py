@@ -2,7 +2,7 @@ import django_filters as filters
 from django.contrib.auth.models import User
 from django.db.models import Q
 
-from basic_app.models import Device, MachineUsage
+from basic_app.models import Device, MachineUsage, GoogleSheet
 
 class UserFilter(filters.FilterSet):
     SUPERUSER_CHOICES = {
@@ -56,3 +56,27 @@ class MachineUsageFilter(filters.FilterSet):
     class Meta:
         model = MachineUsage
         fields = ['user', 'device', 'time_on', 'time_off', 'total_time']
+
+class GoogleSheetFilter(filters.FilterSet):
+
+    name = filters.CharFilter(method='any_name_filter')
+    filename = filters.CharFilter(method='filename_filter')
+
+    @staticmethod
+    def any_name_filter(self, queryset, name, value):
+        return queryset.filter(
+            Q(user_first_name__icontains=value) |
+            Q(user_last_name__icontains=value) |
+            Q(user_username__icontains=value)
+        )
+    
+    @staticmethod
+    def filename_filter(queryset, name, value):
+        return queryset.filter(
+            Q(filename__icontains=value)
+        )
+
+
+    class Meta:
+        model = GoogleSheet
+        fields = ['user', 'filename']

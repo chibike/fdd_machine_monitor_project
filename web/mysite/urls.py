@@ -1,10 +1,12 @@
-from django.contrib import admin
+# from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 
 from basic_app.views import IndexView, ChangePasswordView, AdminView, NewUserView, LogoutView, DeleteUserView, EditUserView,\
     dummy_function, NewDeviceView, DeleteDeviceView, EditDeviceView, NewMachineUsageView, EditMachineUsageView,\
-    DeleteMachineUsageView, DownloadMachineUsageView, ResetUsageDatabase, error_404, error_403, error_500
+    DeleteMachineUsageView, DownloadMachineUsageView, ResetUsageDatabase, error_404, error_403, error_500, \
+    NewGoogleSheetView, EditGoogleSheetView, DeleteGoogleSheetView, ResetGoogleSheetDatabase, SyncGoogleSheetView, \
+    SyncAllGoogleSheet
 
 from django.conf.urls import handler404, handler500, handler403
 from django.conf.urls.static import static
@@ -25,8 +27,14 @@ urlpatterns = [
     path('edit_machine_usage_entry/<str:id>', EditMachineUsageView.as_view(), name='edit_machine_usage_entry'),
     path('download_machine_usage/', DownloadMachineUsageView.as_view(), name='download_machine_usage'),
     path('reset_usage_database/', ResetUsageDatabase.as_view(), name='reset_usage_database'),
+    path('reset_google_sheet_database/', ResetGoogleSheetDatabase.as_view(), name='reset_google_sheet_database'),
     path('delete_device/<str:id>', DeleteDeviceView.as_view(), name='delete_device'),
     path('delete_machine_usage_entry/<str:id>', DeleteMachineUsageView.as_view(), name='delete_machine_usage_entry'),
+    path('new_google_sheet_entry/', NewGoogleSheetView.as_view(), name='new_google_sheet_entry'),
+    path('sync_all_google_sheets/', SyncAllGoogleSheet.as_view(), name='sync_all_google_sheets'),
+    path('edit_google_sheet_entry/<str:id>', EditGoogleSheetView.as_view(), name='edit_google_sheet_entry'),
+    path('sync_google_sheet_entry/<str:id>', SyncGoogleSheetView.as_view(), name='sync_google_sheet_entry'),
+    path('delete_google_sheet_entry/<str:id>', DeleteGoogleSheetView.as_view(), name='delete_google_sheet_entry'),
     path('', IndexView.as_view(), name='index'),
 ]
 

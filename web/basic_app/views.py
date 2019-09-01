@@ -8,9 +8,11 @@ from django.urls import reverse
 from django.views import View
 from django_tables2 import RequestConfig
 
-from basic_app.forms import LoginForm, ChangePasswordForm, UserFilterFormHelper, NewUserForm, NewDeviceForm, DeviceFilterFormHelper, MachineUsageFilterFormHelper, NewMachineEntryForm
-from basic_app.tables import UserTable, AdminDeviceTable, MachineUsageTable
-from basic_app.models import Device, MachineUsage
+from basic_app.forms import LoginForm, ChangePasswordForm, UserFilterFormHelper, NewUserForm
+from basic_app.forms import NewDeviceForm, DeviceFilterFormHelper, MachineUsageFilterFormHelper
+from basic_app.forms import NewMachineEntryForm, NewGoogleSheetEntryForm, GoogleSheetEntryFormHelper
+from basic_app.tables import UserTable, AdminDeviceTable, MachineUsageTable, GoogleSheetsTable
+from basic_app.models import Device, MachineUsage, GoogleSheet
 from basic_app import support_functions
 from basic_app import filters
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
@@ -20,8 +22,8 @@ from device_manager import device_manager
 import pandas as pd
 
 device_node_manager = device_manager.DeviceManager()
-device_node_manager.initialize()
-device_node_manager.print_details()
+#device_node_manager.initialize()
+#device_node_manager.print_details()
 
 def device_statechange_callback_handler(device):
     print ("{name} is {state}".format(name=device.name, state=device.get_state()))
@@ -96,7 +98,7 @@ class ChangePasswordView(LoginRequiredMixin, View):
 class AdminView(support_functions.IsAuthenticated, View):
     @staticmethod
     def get(request, card='users'):
-        card_list = ['users', 'devices', 'machine_usage']
+        card_list = ['users', 'devices', 'machine_usage', 'google_sheet']
         card = card if card in card_list else 'users'
 
         parameters = {
@@ -125,8 +127,15 @@ class AdminView(support_functions.IsAuthenticated, View):
             table = MachineUsageTable(usage_filter.qs)
             template = 'basic_app/html/admin_machine_usage.html'
             parameters['filter'] = usage_filter
+        elif card == 'google_sheet':
+            sheet_list = GoogleSheet.objects.all()
+            sheet_filter = filters.GoogleSheetFilter(request.GET, queryset=sheet_list)
+            sheet_filter.form.helper =  GoogleSheetEntryFormHelper()
+            table = GoogleSheetsTable(sheet_filter.qs)
+            template = 'basic_app/html/admin_google_sheet.html'
+            parameters['filter'] = sheet_filter
 
-        RequestConfig(request, paginate={'per_page': 10}).configure(table)
+        RequestConfig(request, paginate={'per_page': 30}).configure(table)
         parameters['table'] = table
         return render(request, template, parameters)
 
@@ -272,6 +281,64 @@ class DeleteMachineUsageView(support_functions.IsAuthenticated, View):
     def post(request, id):
         MachineUsage.objects.get(pk=id).delete()
         return rredirect('/admin/machine_usage')
+
+class NewGoogleSheetView(support_functions.IsAuthenticated, View):
+    @staticmethod
+    def get(request):
+        new_google_sheet_entry_form = NewGoogleSheetEntryForm
+        return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_google_sheet_entry_form})
+
+    @staticmethod
+    def post(request):
+        new_google_sheet_entry_form = NewGoogleSheetEntryForm(request.POST, request.FILES)
+        if new_google_sheet_entry_form.is_valid():
+            new_google_sheet_entry_form.save()
+        else:
+            return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_google_sheet_entry_form})
+        return redirect('/admin/google_sheet')
+
+class EditGoogleSheetView(support_functions.IsAuthenticated, View):
+    @staticmethod
+    def get(request, id):
+        google_sheet_entry = GoogleSheet.objects.get(pk=id)
+        edit_google_sheet_entry_form = NewGoogleSheetEntryForm(instance=google_sheet_entry)
+        return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_google_sheet_entry_form})
+
+    @staticmethod
+    def post(request, id):
+        google_sheet_entry = GoogleSheet.objects.get(pk=id)
+        edit_google_sheet_entry_form = NewGoogleSheetEntryForm(request.POST, request.FILES, instance=google_sheet_entry)
+        if edit_google_sheet_entry_form.is_valid():
+            edit_google_sheet_entry_form.save()
+        else:
+            return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_google_sheet_entry_form})
+        return redirect('/admin/google_sheet')
+
+class SyncGoogleSheetView(support_functions.IsAuthenticated, View):
+    @staticmethod
+    def get(request, id):
+        GoogleSheet.objects.get(pk=id).sync()
+        return redirect('/admin/google_sheet')
+
+class DeleteGoogleSheetView(support_functions.IsAuthenticated, View):
+    @staticmethod
+    def post(request, id):
+        GoogleSheet.objects.get(pk=id).delete()
+        return redirect('/admin/google_sheet')
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ResetGoogleSheetDatabase(support_functions.IsAuthenticated, View):
+    @staticmethod
+    def get(request):
+        GoogleSheet.objects.all().delete()
+        return redirect('/admin/google_sheet')
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SyncAllGoogleSheet(support_functions.IsAuthenticated, View):
+    @staticmethod
+    def get(request):
+        GoogleSheet.objects.all().sync()
+        return redirect('/admin/google_sheet')
 
 def error_403(request, exception=None):
     data = {}

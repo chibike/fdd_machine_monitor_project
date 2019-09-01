@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from django_tables2 import tables
 from django_tables2.tables import columns
 
-from basic_app.models import Device, MachineUsage
+from basic_app.models import Device, MachineUsage, GoogleSheet
 import random
 
 class UserTable(tables.Table):
@@ -103,4 +103,35 @@ class MachineUsageTable(tables.Table):
         model = MachineUsage
         sequence = ('user', 'device', 'time_on', 'time_off', 'total_time', 'action')
         fields =  ('user', 'device', 'time_on', 'time_off', 'total_time', 'action')
+        attrs = {'class': 'table table-striped'}
+
+class GoogleSheetsTable(tables.Table):
+    user = columns.Column(verbose_name="User", empty_values=())
+    filename = columns.Column(verbose_name="Google Sheet Name", empty_values=())
+    credentials = columns.Column(verbose_name="Credentials", empty_values=(), orderable=False)
+    action = columns.Column(verbose_name='Action', empty_values=(), orderable=False)
+
+    @staticmethod
+    def render_action(record):
+        return format_html('''{0}''',record.user.username)
+
+    @staticmethod
+    def render_action(record):
+        return format_html('''<a href="#" class="delete_tag"
+                  data-toggle="modal"
+                  data-target="#confirm_modal"
+                  data-id="{0}"
+                  data-name="G Sheet: {1}"
+                  data-action="{2}">Delete</a> |
+                  <a href="{3}">Edit</a> | <a href="{4}">Sync</a>''',
+                           record.id,
+                           record.filename,
+                           reverse('delete_google_sheet_entry', args=[record.id]),
+                           reverse('edit_google_sheet_entry', args=[record.id]),
+                           reverse('sync_google_sheet_entry', args=[record.id]))
+
+    class Meta:
+        model = GoogleSheet
+        sequence = ('user', 'filename', 'credentials', 'action')
+        fields =  ('user', 'filename', 'credentials', 'action')
         attrs = {'class': 'table table-striped'}
