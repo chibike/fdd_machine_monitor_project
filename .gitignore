@@ -1,3 +1,5 @@
 web/media/*
 web/*/migrations/*
 *__*.pyc
+__*__
+__*__/*
