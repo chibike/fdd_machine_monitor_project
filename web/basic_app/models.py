@@ -11,6 +11,14 @@ import gspread
 import oauth2client
 from oauth2client.service_account import ServiceAccountCredentials
 
+class ErrorCodes(object):
+    # error codes
+    UNAUTHORIZED = -1
+    NOT_FOUND = -2
+    FAILED_UPDATED = -3
+    API_ERROR = -4
+    UNKNOWN = -100
+
 class Device(models.Model):
     id = models.CharField(max_length=100, unique=True, primary_key=True, help_text='Device id')
     read_pipe = models.CharField(max_length=1000, help_text='Read pipe for device', default="0xc2c2c2c2c2")
@@ -19,6 +27,7 @@ class Device(models.Model):
     def __str__(self):
         return "Device {}".format(self.id)
 
+
 class MachineUsage(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     device = models.ForeignKey(Device, on_delete=models.SET_NULL, null=True)
@@ -26,32 +35,130 @@ class MachineUsage(models.Model):
     time_off = models.DateTimeField(default=datetime.datetime.now, blank=True)
     total_time = models.DurationField()
 
+    def update_gsheet(self):
+        for gsheet in GoogleSheet.objects.filter(user=self.user):
+            gsheet.update_sheet_with(self)
+
+
+class GoogleSheetStatus(object):
+    inactive = '-'
+    should_sync = 'x'
+    active = 'v'
+
+    choices = [
+        (inactive, 'In Active'),
+        (should_sync, 'Sync'),
+        (active, 'Active'),
+    ]
+
+    @staticmethod
+    def get_default_choice():
+        return GoogleSheetStatus.inactive
+
 
 class GoogleSheet(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     filename = models.CharField(max_length=100, null=False)
     credentials = models.FileField(upload_to="uploads/%Y/%m/%d/")
+    status = models.CharField(max_length=10, choices=GoogleSheetStatus.choices, default=GoogleSheetStatus.get_default_choice())
 
-    scope = ['https://spreadsheets.google.com/feeds']
+    scope =  ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
 
-    def sync(self):
-
+    def authorize(self):
+        client = None
+        error_codes = []
         creds = ServiceAccountCredentials.from_json_keyfile_name(self.credentials.path, self.scope)
         
         try:
             client = gspread.authorize(creds)
         except oauth2client.client.HttpAccessTokenRefreshError as e:
             print ("***** AUTH ERROR: `{}`".format(e))
-            return False
+            error_codes.append(ErrorCodes.UNAUTHORIZED)
+        except Exception as e:
+            print ("Unknown error: `{}`".format(e))
+            error_codes.append(ErrorCodes.UNKNOWN)
+        
+        return client, error_codes
+    
+    def get_gsheet(self):
+        sheet = None
+        client, error_codes = self.authorize()
 
-        try:
-            sheet = client.open(self.filename).sheet1
-            print (dir(sheet))
-        except gspread.exceptions.APIError as e:
-            print ("***** IO ERROR: `{}`".format(e))
-            return False
+        if client is not None:
+            try:
+                sheet = client.open(self.filename).sheet1
+                self.status = GoogleSheetStatus.should_sync
+            except gspread.exceptions.SpreadsheetNotFound:
+                print ("SpreadsheetNotFound error: `{}`".format(e))
+                error_codes.append(ErrorCodes.NOT_FOUND)
+            except gspread.exceptions.APIError:
+                print ("APIError error: `{}`".format(e))
+                error_codes.append(ErrorCodes.API_ERROR)
+            except Exception as e:
+                print ("Unknown error: `{}`".format(e))
+                error_codes.append(ErrorCodes.UNKNOWN)
+        else:
+            error_codes.append(ErrorCodes.UNAUTHORIZED)
+        
+        return sheet, error_codes
+
+    def sync(self):
+        for deferred_submission in DeferredSubmission.objects.filter(gsheet=self):
+            self.update_sheet_with(deferred_submission.machine_usage)
+            deferred_submission.delete()
 
         return True
+    
+    @staticmethod
+    def sync_all():
+        for gsheet in GoogleSheet.objects.all():
+            gsheet.sync()
+
+        return True
+    
+    def update_sheet_with(self, machine_usage):
+
+        def __perform_update(sheet, row):
+            if isinstance(sheet, gspread.models.Worksheet):
+                # perform better validation for append row
+                return bool(sheet.append_row(row))
+            return False
+        
+        def __defer_update():
+            # TODO: Update gsheet status to indicate a defered data
+
+            deferred_submission = DeferredSubmission(gsheet=self, machine_usage=machine_usage)
+            deferred_submission.save()
+            return True
+
+
+        sheet, error_codes = self.get_gsheet()
+        if (ErrorCodes.UNAUTHORIZED in error_codes) or (ErrorCodes.NOT_FOUND in error_codes):
+            if not __defer_update():
+                error_codes.append(ErrorCodes.FAILED_UPDATED)
+        elif len(error_codes) <= 0 and sheet is not None:
+            row = [
+                str(machine_usage.user.username),
+                str(machine_usage.device),
+                str(machine_usage.time_on),
+                str(machine_usage.time_off),
+                str(machine_usage.total_time),
+            ]
+
+            if not __perform_update(sheet, row):
+                error_codes.append(ErrorCodes.FAILED_UPDATED)
+            else:
+                if len(DeferredSubmission.objects.filter(gsheet=self)) <= 0:
+                     self.status = GoogleSheetStatus.active
+                else:
+                     self.status = GoogleSheetStatus.should_sync
+        
+        return len(error_codes) <= 0
+
+
+class DeferredSubmission(models.Model):
+    machine_usage = models.ForeignKey(MachineUsage, on_delete=models.CASCADE, null=False)
+    gsheet = models.ForeignKey(GoogleSheet, on_delete=models.CASCADE, null=False)
 
 
 @receiver(models.signals.post_delete, sender=GoogleSheet)

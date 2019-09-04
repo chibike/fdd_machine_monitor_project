@@ -261,6 +261,7 @@ class NewMachineEntryForm(forms.ModelForm):
         instance = super(NewMachineEntryForm, self).save(commit=False)
         if commit:
             instance.save()
+            instance.update_gsheet()
         return instance
 
     class Meta:

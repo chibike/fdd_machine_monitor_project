@@ -2,6 +2,7 @@ from django.http import Http404
 from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -55,11 +56,11 @@ load_devices()
 device_node_manager.run()
 
 
-class IndexView(AccessMixin, View):
+class IndexView(View):
     @staticmethod
     def get(request):
         if request.user.is_authenticated:
-            return redirect(reverse('admin'))
+            return redirect(reverse('boards'))
         login_form = LoginForm
         return render(request, 'basic_app/html/login.html', {'login_form': login_form, 'active_nav': 'index'})
 
@@ -69,15 +70,17 @@ class IndexView(AccessMixin, View):
             user = login_form.login()
             if user is not None:
                 login(request, user)
-                redirect_uri = request.GET.get(self.get_redirect_field_name(), None)
-                if redirect_uri:
-                    return redirect(redirect_uri)
+                # redirect_uri = request.GET.get(self.get_redirect_field_name(), None)
+                # if redirect_uri:
+                #     return redirect(redirect_uri)
                 
-                return redirect(reverse('admin'))
+                return redirect(reverse('boards'))
         return render(request, "basic_app/html/login.html", {'login_form': login_form, 'active_nav': 'index'})
 
 
 class ChangePasswordView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request):
         change_password_form = ChangePasswordForm
@@ -93,16 +96,18 @@ class ChangePasswordView(LoginRequiredMixin, View):
         else:
             return render(request, 'basic_app/html/change_password.html', {'change_password_form': change_password_form,
                                                                  'active_nav': 'change_password'})
-        return redirect(reverse('admin'))
+        return redirect(reverse('boards'))
 
-class AdminView(support_functions.IsAuthenticated, View):
+class AdminView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request, card='users'):
         card_list = ['users', 'devices', 'machine_usage', 'google_sheet']
         card = card if card in card_list else 'users'
 
         parameters = {
-                        'active_nav': 'admin',
+                        'active_nav': 'boards',
                         'active_card': card
                     }
 
@@ -139,7 +144,9 @@ class AdminView(support_functions.IsAuthenticated, View):
         parameters['table'] = table
         return render(request, template, parameters)
 
-class NewDeviceView(support_functions.IsAuthenticated, View):
+class NewDeviceView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request):
         new_device_form = NewDeviceForm
@@ -153,16 +160,18 @@ class NewDeviceView(support_functions.IsAuthenticated, View):
             load_devices()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_device_form})
-        return redirect(reverse('admin', args=['devices']))
+        return redirect(reverse('boards', args=['devices']))
 
-class DeleteDeviceView(support_functions.IsAuthenticated, View):
+class DeleteDeviceView(LoginRequiredMixin, View):
     @staticmethod
     def post(request, id):
         Device.objects.get(id=id).delete()
         load_devices()
-        return redirect(reverse('admin', args=['devices']))
+        return redirect(reverse('boards', args=['devices']))
 
-class EditDeviceView(support_functions.IsAuthenticated, View):
+class EditDeviceView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request, id):
         device = Device.objects.get(pk=id)
@@ -178,7 +187,7 @@ class EditDeviceView(support_functions.IsAuthenticated, View):
             load_devices()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_device_form})
-        return redirect(reverse('admin'))
+        return redirect(reverse('boards'))
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(View):
@@ -188,7 +197,9 @@ class LogoutView(View):
         return redirect(reverse('index'))
 
 @method_decorator(csrf_exempt, name='dispatch')
-class DownloadMachineUsageView(support_functions.IsAuthenticated, View):
+class DownloadMachineUsageView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request):
         filename = "machine_usage.csv"
@@ -200,13 +211,17 @@ class DownloadMachineUsageView(support_functions.IsAuthenticated, View):
         return response
 
 @method_decorator(csrf_exempt, name='dispatch')
-class ResetUsageDatabase(support_functions.IsAuthenticated, View):
+class ResetUsageDatabase(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request):
         MachineUsage.objects.all().delete()
-        return redirect('/admin/machine_usage')
+        return redirect('/boards/machine_usage')
 
-class NewUserView(support_functions.IsAuthenticated, View):
+class NewUserView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request):
         new_user_form = NewUserForm
@@ -219,15 +234,19 @@ class NewUserView(support_functions.IsAuthenticated, View):
             new_user_form.save()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_user_form})
-        return redirect('/admin/users')
+        return redirect('/boards/users')
 
-class DeleteUserView(support_functions.IsAuthenticated, View):
+class DeleteUserView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def post(request, id):
         User.objects.get(pk=id).delete()
-        return redirect('/admin/users')
+        return redirect('/boards/users')
 
-class EditUserView(support_functions.IsAuthenticated, View):
+class EditUserView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request, id):
         user = User.objects.get(pk=id)
@@ -242,9 +261,11 @@ class EditUserView(support_functions.IsAuthenticated, View):
             edit_user_form.save()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_user_form})
-        return redirect('/admin/users')
+        return redirect('/boards/users')
 
-class NewMachineUsageView(support_functions.IsAuthenticated, View):
+class NewMachineUsageView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request):
         new_machine_usage_entry_form = NewMachineEntryForm
@@ -257,9 +278,11 @@ class NewMachineUsageView(support_functions.IsAuthenticated, View):
             new_machine_usage_entry_form.save()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_machine_usage_entry_form})
-        return redirect('/admin/machine_usage')
+        return redirect('/boards/machine_usage')
 
-class EditMachineUsageView(support_functions.IsAuthenticated, View):
+class EditMachineUsageView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request, id):
         machine_usage_entry = MachineUsage.objects.get(pk=id)
@@ -274,15 +297,19 @@ class EditMachineUsageView(support_functions.IsAuthenticated, View):
             edit_machine_usage_entry_form.save()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_machine_usage_entry_form})
-        return redirect('/admin/machine_usage')
+        return redirect('/boards/machine_usage')
 
-class DeleteMachineUsageView(support_functions.IsAuthenticated, View):
+class DeleteMachineUsageView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def post(request, id):
         MachineUsage.objects.get(pk=id).delete()
-        return rredirect('/admin/machine_usage')
+        return redirect('/boards/machine_usage')
 
-class NewGoogleSheetView(support_functions.IsAuthenticated, View):
+class NewGoogleSheetView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request):
         new_google_sheet_entry_form = NewGoogleSheetEntryForm
@@ -295,9 +322,11 @@ class NewGoogleSheetView(support_functions.IsAuthenticated, View):
             new_google_sheet_entry_form.save()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_google_sheet_entry_form})
-        return redirect('/admin/google_sheet')
+        return redirect('/boards/google_sheet')
 
-class EditGoogleSheetView(support_functions.IsAuthenticated, View):
+class EditGoogleSheetView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request, id):
         google_sheet_entry = GoogleSheet.objects.get(pk=id)
@@ -312,33 +341,41 @@ class EditGoogleSheetView(support_functions.IsAuthenticated, View):
             edit_google_sheet_entry_form.save()
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': edit_google_sheet_entry_form})
-        return redirect('/admin/google_sheet')
+        return redirect('/boards/google_sheet')
 
-class SyncGoogleSheetView(support_functions.IsAuthenticated, View):
+class SyncGoogleSheetView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request, id):
         GoogleSheet.objects.get(pk=id).sync()
-        return redirect('/admin/google_sheet')
+        return redirect('/boards/google_sheet')
 
-class DeleteGoogleSheetView(support_functions.IsAuthenticated, View):
+class DeleteGoogleSheetView(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def post(request, id):
         GoogleSheet.objects.get(pk=id).delete()
-        return redirect('/admin/google_sheet')
+        return redirect('/boards/google_sheet')
 
 @method_decorator(csrf_exempt, name='dispatch')
-class ResetGoogleSheetDatabase(support_functions.IsAuthenticated, View):
+class ResetGoogleSheetDatabase(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request):
-        GoogleSheet.objects.all().delete()
-        return redirect('/admin/google_sheet')
+        [obj.delete() for obj in GoogleSheet.objects.all()]
+        return redirect('/boards/google_sheet')
 
 @method_decorator(csrf_exempt, name='dispatch')
-class SyncAllGoogleSheet(support_functions.IsAuthenticated, View):
+class SyncAllGoogleSheet(LoginRequiredMixin, View):
+    login_url = '/'
+
     @staticmethod
     def get(request):
-        GoogleSheet.objects.all().sync()
-        return redirect('/admin/google_sheet')
+        GoogleSheet.sync_all()
+        return redirect('/boards/google_sheet')
 
 def error_403(request, exception=None):
     data = {}

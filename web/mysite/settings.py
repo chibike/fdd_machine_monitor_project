@@ -24,7 +24,7 @@ if DEBUG:
 INSTALLED_APPS = [
     'basic_app.apps.BasicAppConfig',
     'device_manager.apps.DeviceManagerConfig',
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

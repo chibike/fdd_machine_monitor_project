@@ -1,5 +1,5 @@
-# from django.contrib import admin
-from django.urls import path
+from django.contrib import admin
+from django.urls import path, include
 from django.conf import settings
 
 from basic_app.views import IndexView, ChangePasswordView, AdminView, NewUserView, LogoutView, DeleteUserView, EditUserView,\
@@ -12,10 +12,10 @@ from django.conf.urls import handler404, handler500, handler403
 from django.conf.urls.static import static
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
-    path('admin/<str:card>', AdminView.as_view(), name='admin'),
-    path('admin/', AdminView.as_view(), name='admin'),
-    path('dummy_function', dummy_function, name='dummy_function'),
+    path('admin/', admin.site.urls),
+    path('boards/<str:card>', AdminView.as_view(), name='boards'),
+    path('boards/', AdminView.as_view(), name='boards'),
+    #path('dummy_function', dummy_function, name='dummy_function'),
     path('new_user/', NewUserView.as_view(), name='new_user'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('delete_user/<int:id>', DeleteUserView.as_view(), name='delete_user'),
@@ -36,6 +36,8 @@ urlpatterns = [
     path('sync_google_sheet_entry/<str:id>', SyncGoogleSheetView.as_view(), name='sync_google_sheet_entry'),
     path('delete_google_sheet_entry/<str:id>', DeleteGoogleSheetView.as_view(), name='delete_google_sheet_entry'),
     path('', IndexView.as_view(), name='index'),
+
+    # path('accounts/', include('django.contrib.auth.urls')),
 ]
 
 handler404 = 'basic_app.views.error_404'

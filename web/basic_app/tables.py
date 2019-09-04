@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from django_tables2 import tables
 from django_tables2.tables import columns
 
-from basic_app.models import Device, MachineUsage, GoogleSheet
+from basic_app.models import Device, MachineUsage, GoogleSheet, GoogleSheetStatus
 import random
 
 class UserTable(tables.Table):
@@ -92,8 +92,7 @@ class MachineUsageTable(tables.Table):
                   data-target="#confirm_modal"
                   data-id="{0}"
                   data-name="Device {1}"
-                  data-action="{2}">Delete</a> |
-                  <a href="{3}">Edit</a>''',
+                  data-action="{2}">Delete</a>''',
                            record.id,
                            record.device_id,
                            reverse('delete_machine_usage_entry', args=[record.id]),
@@ -109,11 +108,27 @@ class GoogleSheetsTable(tables.Table):
     user = columns.Column(verbose_name="User", empty_values=())
     filename = columns.Column(verbose_name="Google Sheet Name", empty_values=())
     credentials = columns.Column(verbose_name="Credentials", empty_values=(), orderable=False)
+    status = columns.Column(verbose_name="Status", orderable=False)
     action = columns.Column(verbose_name='Action', empty_values=(), orderable=False)
 
     @staticmethod
     def render_action(record):
         return format_html('''{0}''',record.user.username)
+    
+    @staticmethod
+    def render_status(record):
+        if record.status == GoogleSheetStatus.inactive:
+            return format_html('<img class="icon" src="{0}" alt="not active" data-toggle="tooltip" title="Sheet is not active"', static('vendor/open-iconic/svg/x.svg'))
+        
+        elif record.status == GoogleSheetStatus.should_sync:
+            return format_html('<img class="icon" src="{0}" alt="deferred submissions" data-toggle="tooltip" title="Sheet is out of sync"', static('vendor/open-iconic/svg/share.svg'))
+
+        elif record.status == GoogleSheetStatus.active:
+            return format_html('<img class="icon" src="{0}" alt="active" data-toggle="tooltip" title="Sheet is active and up to date"', static('vendor/open-iconic/svg/check.svg'))
+        
+        else:
+            return format_html('<img class="icon" src="{0}" alt="unknown" data-toggle="tooltip" title="Sheet is in an unknown state"', static('vendor/open-iconic/svg/ban.svg'))
+
 
     @staticmethod
     def render_action(record):
@@ -132,6 +147,6 @@ class GoogleSheetsTable(tables.Table):
 
     class Meta:
         model = GoogleSheet
-        sequence = ('user', 'filename', 'credentials', 'action')
-        fields =  ('user', 'filename', 'credentials', 'action')
+        sequence = ('user', 'filename', 'credentials', 'status', 'action')
+        fields =  ('user', 'filename', 'credentials', 'status', 'action')
         attrs = {'class': 'table table-striped'}

@@ -3,16 +3,16 @@
 {% block content %}
     <ul class="nav nav-tabs">
         <li class="nav-item">
-            <a class="nav-link {% if active_card == 'users' %}active{% endif %}" href="{% url 'admin' 'users' %}">Users</a>
+            <a class="nav-link {% if active_card == 'users' %}active{% endif %}" href="{% url 'boards' 'users' %}">Users</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {% if active_card == 'devices' %}active{% endif %}" href="{% url 'admin' 'devices' %}">Devices</a>
+            <a class="nav-link {% if active_card == 'devices' %}active{% endif %}" href="{% url 'boards' 'devices' %}">Devices</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {% if active_card == 'machine_usage' %}active{% endif %}" href="{% url 'admin' 'machine_usage' %}">Usage</a>
+            <a class="nav-link {% if active_card == 'machine_usage' %}active{% endif %}" href="{% url 'boards' 'machine_usage' %}">Usage</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {% if active_card == 'google_sheet' %}active{% endif %}" href="{% url 'admin' 'google_sheet' %}">Google Sheets</a>
+            <a class="nav-link {% if active_card == 'google_sheet' %}active{% endif %}" href="{% url 'boards' 'google_sheet' %}">Google Sheets</a>
         </li>
     </ul>
     {% block admin_table %}{% endblock %}
