@@ -202,6 +202,9 @@ class NewDeviceForm(forms.ModelForm):
                     Field('id', css_class='form-control w-100', placeholder='0'), css_class='form-group'
                 ),
                 Div(
+                    Field('name', css_class='form-control w-100', placeholder='Device 0'), css_class='form-group'
+                ),
+                Div(
                     Field('read_pipe', css_class='form-control w-100', placeholder='Read Pipe'), css_class='form-group'
                 ),
                 Div(
@@ -218,7 +221,7 @@ class NewDeviceForm(forms.ModelForm):
 
     class Meta:
         model = Device
-        fields = ['id', 'read_pipe', 'write_pipe']
+        fields = ['id', 'name', 'read_pipe', 'write_pipe']
 
 class DeviceFilterFormHelper(FormHelper):
     _form_method = 'GET'
@@ -261,7 +264,6 @@ class NewMachineEntryForm(forms.ModelForm):
         instance = super(NewMachineEntryForm, self).save(commit=False)
         if commit:
             instance.save()
-            instance.update_gsheet()
         return instance
 
     class Meta:

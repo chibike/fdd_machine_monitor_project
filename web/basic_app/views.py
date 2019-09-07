@@ -1,19 +1,18 @@
-from django.http import Http404
-from django.contrib.auth import login, logout
+from django.http import JsonResponse, HttpResponse, FileResponse, Http404
 from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse, FileResponse
+from django.contrib.auth import login, logout
 from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django_tables2 import RequestConfig
 from django.urls import reverse
 from django.views import View
-from django_tables2 import RequestConfig
 
 from basic_app.forms import LoginForm, ChangePasswordForm, UserFilterFormHelper, NewUserForm
 from basic_app.forms import NewDeviceForm, DeviceFilterFormHelper, MachineUsageFilterFormHelper
 from basic_app.forms import NewMachineEntryForm, NewGoogleSheetEntryForm, GoogleSheetEntryFormHelper
 from basic_app.tables import UserTable, AdminDeviceTable, MachineUsageTable, GoogleSheetsTable
-from basic_app.models import Device, MachineUsage, GoogleSheet
+from basic_app.models import Device, MachineUsage, GoogleSheet, UserWrapper
 from basic_app import support_functions
 from basic_app import filters
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
@@ -21,6 +20,7 @@ from django.utils.decorators import method_decorator
 
 from device_manager import device_manager
 import pandas as pd
+import json
 
 device_node_manager = device_manager.DeviceManager()
 #device_node_manager.initialize()
@@ -28,18 +28,22 @@ device_node_manager = device_manager.DeviceManager()
 
 def device_statechange_callback_handler(device):
     print ("{name} is {state}".format(name=device.name, state=device.get_state()))
-
-    timestamp = device.get_timestamp()
-
-    try:
-        _user = User.objects.filter(id__exact=device.get_user())[-1][0]
-    except:
-        _user = User.objects.all()[0]
-
+    
     _device = Device.objects.filter(id__exact=device.name.split(" ")[-1])[0]
+    _device.state = device.get_state()
+    _device.save()
 
-    _usage = MachineUsage(user=_user, device=_device, time_on=timestamp["time_on"], time_off=timestamp["time_off"], total_time=timestamp["total_time"])
-    _usage.save()
+    # device was switched off
+    if not device.get_state():
+        timestamp = device.get_timestamp()
+
+        try:
+            _user = User.objects.filter(id__exact=device.get_user())[-1][0]
+        except:
+            _user = User.objects.all()[0]
+
+        _usage = MachineUsage(user=_user, device=_device, time_on=timestamp["time_on"], time_off=timestamp["time_off"], total_time=timestamp["total_time"])
+        _usage.save()
 
 def load_devices():
     print ("loading your devices")
@@ -49,11 +53,19 @@ def load_devices():
     for device in devices:
         _device = device_manager.Device(str(device))
         _device.initialize(pipe_a=eval(device.read_pipe), pipe_b=eval(device.write_pipe))
-        _device.add_state_change_callback("cb", device_statechange_callback_handler)
-        device_node_manager.add_device(str(device), _device)
+        _device.add_state_change_callback("tag", device_statechange_callback_handler)
+        device_node_manager.add_device(hash(device), _device)
 
 load_devices()
 device_node_manager.run()
+
+
+def get_device_usage_metrics(request, exception=None):
+    return HttpResponse(json.dumps(Device.get_devices_usage_metrics()))
+
+
+def get_user_usage_metrics(request, exception=None):
+    return HttpResponse(json.dumps(UserWrapper.get_users_usage_metrics()))
 
 
 class IndexView(View):
@@ -103,7 +115,7 @@ class AdminView(LoginRequiredMixin, View):
 
     @staticmethod
     def get(request, card='users'):
-        card_list = ['users', 'devices', 'machine_usage', 'google_sheet']
+        card_list = ['users', 'devices', 'machine_usage', 'google_sheet', 'graphs']
         card = card if card in card_list else 'users'
 
         parameters = {
@@ -115,33 +127,35 @@ class AdminView(LoginRequiredMixin, View):
             user_list = User.objects.all()
             user_filter = filters.UserFilter(request.GET, queryset=user_list)
             user_filter.form.helper = UserFilterFormHelper()
-            table = UserTable(user_filter.qs)
             template = 'basic_app/html/admin_users.html'
+            parameters['table'] = UserTable(user_filter.qs)
             parameters['filter'] = user_filter
         elif card == 'devices':
             device_list = Device.objects.all()
             device_filter = filters.DeviceFilter(request.GET, queryset=device_list)
             device_filter.form.helper = DeviceFilterFormHelper()
-            table = AdminDeviceTable(device_filter.qs)
             template = 'basic_app/html/admin_devices.html'
+            parameters['table'] = AdminDeviceTable(device_filter.qs)
             parameters['filter'] = device_filter
         elif card == 'machine_usage':
             usage_list = MachineUsage.objects.all()
             usage_filter = filters.MachineUsageFilter(request.GET, queryset=usage_list)
             usage_filter.form.helper =  MachineUsageFilterFormHelper()
-            table = MachineUsageTable(usage_filter.qs)
             template = 'basic_app/html/admin_machine_usage.html'
+            parameters['table'] = MachineUsageTable(usage_filter.qs)
             parameters['filter'] = usage_filter
         elif card == 'google_sheet':
             sheet_list = GoogleSheet.objects.all()
             sheet_filter = filters.GoogleSheetFilter(request.GET, queryset=sheet_list)
             sheet_filter.form.helper =  GoogleSheetEntryFormHelper()
-            table = GoogleSheetsTable(sheet_filter.qs)
             template = 'basic_app/html/admin_google_sheet.html'
+            parameters['table'] = GoogleSheetsTable(sheet_filter.qs)
             parameters['filter'] = sheet_filter
+        elif card == 'graphs':
+            template = 'basic_app/html/admin_graphs.html'
+        if 'table' in parameters.keys():
+            RequestConfig(request, paginate={'per_page': 30}).configure(parameters['table'])
 
-        RequestConfig(request, paginate={'per_page': 30}).configure(table)
-        parameters['table'] = table
         return render(request, template, parameters)
 
 class NewDeviceView(LoginRequiredMixin, View):
@@ -279,6 +293,7 @@ class NewMachineUsageView(LoginRequiredMixin, View):
         else:
             return render(request, 'basic_app/html/create_new_form.html', {'create_new_form': new_machine_usage_entry_form})
         return redirect('/boards/machine_usage')
+
 
 class EditMachineUsageView(LoginRequiredMixin, View):
     login_url = '/'

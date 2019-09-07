@@ -103,8 +103,12 @@ class Device(object):
         self.__total_time = self.__time_off - self.__time_on
 
         self.__state_change_callbacks = dict()
+        self.thread_pool = []
     
     def __repr__(self):
+        return "Device({})".format(self.__str__())
+    
+    def __str__(self):
         res = {
             "name" : self.name,
             "user" : self.__user,
@@ -117,9 +121,9 @@ class Device(object):
         }
 
         return json.dumps(res)
-    
-    def __str__(self):
-        return str(self.__repr__())
+
+    def __hash__(self):
+        return hash(self.__str__())
 
     def initialize(self, pipe_a=DEFAULT_PIPE_A, pipe_b=DEFAULT_PIPE_B):
         self.__pipe_a = pipe_a
@@ -162,6 +166,9 @@ class Device(object):
         
         self.__state_change_callbacks.pop(tag)
     
+    def get_state(self):
+        return self.__state
+
     def set_state(self, user, state):
 
         if self.__state == state and self.__user == user:
@@ -196,13 +203,11 @@ class Device(object):
         for callback in self.__state_change_callbacks.values():
             if not callable(callback):
                 continue
-            
-            callback(self)
 
-            # try:    
-            #     callback(self)
-            # except:
-            #     pass
+            self.thread_pool.append(
+                threading.Thread(target=callback, args=(self,))
+            )
+            self.thread_pool[-1].start()
     
     def get_state(self):
         return self.__state

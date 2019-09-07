@@ -6,7 +6,7 @@ from basic_app.views import IndexView, ChangePasswordView, AdminView, NewUserVie
     dummy_function, NewDeviceView, DeleteDeviceView, EditDeviceView, NewMachineUsageView, EditMachineUsageView,\
     DeleteMachineUsageView, DownloadMachineUsageView, ResetUsageDatabase, error_404, error_403, error_500, \
     NewGoogleSheetView, EditGoogleSheetView, DeleteGoogleSheetView, ResetGoogleSheetDatabase, SyncGoogleSheetView, \
-    SyncAllGoogleSheet
+    SyncAllGoogleSheet, get_device_usage_metrics, get_user_usage_metrics
 
 from django.conf.urls import handler404, handler500, handler403
 from django.conf.urls.static import static
@@ -35,6 +35,10 @@ urlpatterns = [
     path('edit_google_sheet_entry/<str:id>', EditGoogleSheetView.as_view(), name='edit_google_sheet_entry'),
     path('sync_google_sheet_entry/<str:id>', SyncGoogleSheetView.as_view(), name='sync_google_sheet_entry'),
     path('delete_google_sheet_entry/<str:id>', DeleteGoogleSheetView.as_view(), name='delete_google_sheet_entry'),
+    
+    path('get_device_usage_metrics/', get_device_usage_metrics, name='get_device_usage_metrics'),
+    path('get_user_usage_metrics/', get_user_usage_metrics, name='get_user_usage_metrics'),
+    
     path('', IndexView.as_view(), name='index'),
 
     # path('accounts/', include('django.contrib.auth.urls')),

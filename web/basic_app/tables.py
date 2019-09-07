@@ -46,9 +46,18 @@ class UserTable(tables.Table):
 
 class AdminDeviceTable(tables.Table):
     id = columns.Column(verbose_name='#')
+    name = columns.Column(verbose_name='Device Name', empty_values=())
     read_pipe = columns.Column(verbose_name='Read Pipe Key', empty_values=())
     write_pipe = columns.Column(verbose_name='Write Pipe Key', empty_values=())
+    state = columns.Column(verbose_name="State", orderable=False)
     action = columns.Column(verbose_name='Action', empty_values=(), orderable=False)
+
+    @staticmethod
+    def render_state(record):
+        if record.state:
+            return format_html('<span class="w-100 text-center">ON</span>')
+        else:
+            return format_html('<span class="w-100 text-center">OFF</span>')
 
     @staticmethod
     def render_action(record):
@@ -71,8 +80,8 @@ class AdminDeviceTable(tables.Table):
 
     class Meta:
         model = Device
-        sequence = ('id', 'read_pipe', 'write_pipe', 'action')
-        fields = ('id', 'read_pipe', 'write_pipe', 'action')
+        sequence = ('id', 'name', 'read_pipe', 'write_pipe', 'state', 'action')
+        fields = ('id', 'name', 'read_pipe', 'write_pipe', 'state', 'action')
         attrs = {'class': 'table table-striped'}
 
 
@@ -111,9 +120,9 @@ class GoogleSheetsTable(tables.Table):
     status = columns.Column(verbose_name="Status", orderable=False)
     action = columns.Column(verbose_name='Action', empty_values=(), orderable=False)
 
-    @staticmethod
-    def render_action(record):
-        return format_html('''{0}''',record.user.username)
+    # @staticmethod
+    # def render_action(record):
+    #     return format_html('''{0}''',record.user.username)
     
     @staticmethod
     def render_status(record):

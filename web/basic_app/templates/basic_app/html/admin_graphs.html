@@ -1,0 +1,70 @@
+{% extends "basic_app/html/admin_panel.html" %}
+{% load static %}
+
+{% block admin_table %}
+    <div style="padding-top: 12px" class="mb-5">
+        <form class="form-inline float-left" method="GET">
+            <div id="div_id_resolution" class="form-group">
+                <div class>
+                    <select name="resolution" id="id_resolution" class="mr-2 select form-control" placeholder="Resolution">
+                        <option value="day">day</option>
+                        <option value="week">week</option>
+                        <option value="month" selected>month</option>
+                        <option value="year">year</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="div_id_time_window" class="form-group">
+                <div class>
+                    <input type="number" name="time_window" id="id_time_window" class="mr-2 textinput textInput form-control" placeholder="1" value="1">
+                </div>
+            </div>
+
+            <div class="buttonHolder">
+                <input type="submit" name="submit" id="submit-id-submit" value="Apply Time Window" class="btn btn-primary">
+            </div>
+        </form>
+
+        <div class="float-right">
+            <a href="{% url 'boards' 'graphs' %}"><button type="button" class="btn btn-primary">Refresh</button></a>
+        </div>
+    </div>
+
+    <span class="w-100"></span><br>
+    <h5 class="mt-3 mb-3">Usage per device</h5>
+
+    <div id="admin-devices-graph" class="row">
+        <div class="col-md-6 col-sm-12">
+            <div class="d-flex p-3">
+                <canvas id="device-usage-bar-canvas" class="custom-admin-graph mx-auto"></canvas>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-sm-12">
+            <div class="d-flex p-3">
+                <canvas id="device-usage-line-canvas" class="custom-admin-graph mx-auto"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <h5 class="mt-5 mb-3">Usage per user</h5>
+    <div id="admin-users-graph" class="row">
+        <div class="col-md-6 col-sm-12">
+            <div class="d-flex p-3">
+                <canvas id="user-usage-bar-canvas" class="custom-admin-graph mx-auto"></canvas>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-sm-12">
+            <div class="d-flex p-3">
+                <canvas id="user-usage-line-canvas" class="custom-admin-graph mx-auto"></canvas>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'basic_app/js/graph_support.js' %}"></script>
+    <script src="{% static 'basic_app/js/admin_graph.js' %}"></script>
+{% endblock %}
