@@ -24,7 +24,7 @@ html5lib==0.999999999
 httplib2==0.13.0
 idna==2.7
 jdcal==1.0
-Jinja2>=2.10.1
+Jinja2==2.8
 joblib==0.10.4.dev0
 keyring==10.1
 keyrings.alt==1.3
@@ -55,9 +55,9 @@ python-apt==1.1.0b5
 python-dateutil==2.8.0
 python-gflags==1.5.1
 pytz==2019.2
-pyxdg>=0.26
+pyxdg==0.26
 pyzmq==16.0.2
-requests>=2.20.0
+requests==2.12.4
 RF24==1.3.2
 RPi.GPIO==0.6.5
 rsa==4.0
@@ -67,13 +67,13 @@ scipy==0.18.1
 SecretStorage==2.3.1
 simplejson==3.10.0
 six==1.12.0
-SQLAlchemy>=1.3.0
+SQLAlchemy==1.3.0
 sqlparse==0.3.0
 ssh-import-id==5.6
 tables==3.3.0
 unattended-upgrades==0.1
 uritemplate==0.6
-urllib3>=1.24.2
+urllib3==1.19.1
 vine==1.1.4
 webencodings==0.5
 xlrd==1.0.0
