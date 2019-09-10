@@ -3,3 +3,6 @@ web/*/migrations/*
 *__*.pyc
 __*__
 __*__/*
+
+
+*venv*
