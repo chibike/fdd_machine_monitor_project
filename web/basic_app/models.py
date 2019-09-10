@@ -56,7 +56,7 @@ class ErrorCodes(object):
 class Device(models.Model):
     id = models.CharField(max_length=100, unique=True, primary_key=True, help_text='Device id')
     state = models.BooleanField(default=False)
-    name = models.CharField(max_length=100, default="Device {}".format(id))
+    name = models.CharField(max_length=100, default="My Device")
     read_pipe = models.CharField(max_length=1000, help_text='Read pipe for device', default="0xc2c2c2c2c2")
     write_pipe = models.CharField(max_length=1000, help_text='Write pipe for device', default="0xe7e7e7e7e7")
 
