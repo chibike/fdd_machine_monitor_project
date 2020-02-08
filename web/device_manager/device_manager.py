@@ -3,12 +3,21 @@
 import time
 import json
 import random
+import logging
 import datetime
 import threading
 from RF24 import *
 import RPi.GPIO as GPIO
 
-from django.utils import timezone
+try:
+    from django.utils import timezone
+    _g__gettime = timezone
+    _g__gettime.now()
+except:
+    _g__gettime = datetime.datetime
+
+log_filename = '/home/pi/device_manager.log'
+logging.basicConfig(filename=log_filename, level=logging.DEBUG, format='%(asctime)s %(levelname)s:%(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 DEFAULT_PIPE_A = 0xC2C2C2C2C2
 DEFAULT_PIPE_B = 0xE2E2E2E2E2
@@ -28,7 +37,7 @@ class RadioManager(object):
         self._pipe_b = pipe_b
 
         self._radio.begin()
-        self._radio.setChannel(1)
+        self._radio.setChannel(90)
         self._radio.setPALevel(RF24_PA_MAX)
         self._radio.setDataRate(RF24_1MBPS)
         self._radio.setAutoAck(1)
@@ -90,7 +99,8 @@ class RadioManager(object):
         self._radio.printDetails()
 
 class Device(object):
-    def __init__(self, name="device"):
+    def __init__(self, name="device", idIn=0):
+        self.id = idIn
         self.name = name
 
         self.__pipe_a = None
@@ -98,8 +108,8 @@ class Device(object):
 
         self.__user = None
         self.__state = False
-        self.__time_on = timezone.now() #datetime.datetime.now()
-        self.__time_off = timezone.now() #datetime.datetime.now()
+        self.__time_on = _g__gettime.now() #datetime.datetime.now()
+        self.__time_off = _g__gettime.now()
         self.__total_time = self.__time_off - self.__time_on
 
         self.__state_change_callbacks = dict()
@@ -137,16 +147,19 @@ class Device(object):
         if radio_manager.read_from_pipe(4, 2, self.__pipe_a, self.__pipe_b) != 0:
             return False
 
+        logging.debug("Received message from device")
+
         try:
             d = str(radio_manager.get_databuffer().decode("utf-8"))
         except:
             return
 
+        logging.debug("d: {}".format(d))
+
         if not (d.startswith("{") and d.endswith("}")):
             return False
         
-        # print ("d: {}".format(d))
-        
+        logging.debug("setting state; u: {}, s: {}".format(int(d[2]), int(d[1])))
         self.set_state(user=int(d[2]), state=int(d[1]))
         return True
     
@@ -174,7 +187,7 @@ class Device(object):
         if self.__state == state and self.__user == user:
             return
 
-        current_time = timezone.now() #datetime.datetime.now()
+        current_time = _g__gettime.now() #datetime.datetime.now()
 
         # handle case when device remains on -- but switches user
         if self.__state and self.__user != user:
@@ -192,9 +205,9 @@ class Device(object):
         self.__state = state
 
         if self.__state:
-            self.__time_on = timezone.now() #datetime.datetime.now()
+            self.__time_on = _g__gettime.now() #datetime.datetime.now()
         else:
-            self.__time_off = timezone.now() #datetime.datetime.now()
+            self.__time_off = _g__gettime.now() #datetime.datetime.now()
             self.__total_time = self.__time_off - self.__time_on
         
         self.do_callbacks()
@@ -244,6 +257,8 @@ class DeviceManager(object):
         self.set_radio(radio)
         self.__should_run = True
 
+        logging.debug("initialized radio")
+
     def terminate(self):
         self.kill()
 
@@ -271,29 +286,36 @@ class DeviceManager(object):
         if tag in self.__devices.keys():
             raise ValueError("Tag Error: Tag `{}` exists".format(tag))
         
+        logging.debug("added device with tag: {}".format(tag))
         self.__devices[tag] = device
     
     def remove_device(self, tag):
         if tag not in self.__devices.keys():
             raise ValueError("Tag Error: Tag `{}` does not exist".format(tag))
+
+        logging.debug("removed device with tag: {}".format(tag))
+        self.__devices.pop(tag)
     
     def update(self):
         for device in self.__devices.values():
             device.update(self.__radio_manager)
         
-    def run(self, block=False, loop_interval=0.2):
+    def run(self, block=False, loop_interval=0.5):
 
         def __thread(interval):
+            logging.debug("started run thread")
+            
             while self.__should_run:
                 self.update()
                 time.sleep(interval)
+            
+            logging.debug("exited run thread")
         
         self.thread = threading.Thread(target=__thread, args=(loop_interval,))
         self.thread.start()
 
         if block:
             self.thread.join()
-
 
 if __name__ == "__main__":
     device_manager = DeviceManager()

@@ -23,27 +23,32 @@ import pandas as pd
 import json
 
 device_node_manager = device_manager.DeviceManager()
-#device_node_manager.initialize()
-#device_node_manager.print_details()
+device_node_manager.initialize()
+device_node_manager.print_details()
 
 def device_statechange_callback_handler(device):
-    print ("{name} is {state}".format(name=device.name, state=device.get_state()))
+    print ("'{name}' is '{state}'".format(name=device.name, state=device.get_state()))
     
-    _device = Device.objects.filter(id__exact=device.name.split(" ")[-1])[0]
-    _device.state = device.get_state()
-    _device.save()
+    try:
+        _device = Device.objects.get(id=device.id)
+        _device.state = device.get_state()
+        _device.save()
 
-    # device was switched off
-    if not device.get_state():
-        timestamp = device.get_timestamp()
+        # device was switched off
+        if not device.get_state():
+            timestamp = device.get_timestamp()
 
-        try:
-            _user = User.objects.filter(id__exact=device.get_user())[-1][0]
-        except:
-            _user = User.objects.all()[0]
+            try:
+                _user = User.objects.filter(id__exact=device.get_user())[-1][0]
+            except:
+                _user = User.objects.all()[0]
 
-        _usage = MachineUsage(user=_user, device=_device, time_on=timestamp["time_on"], time_off=timestamp["time_off"], total_time=timestamp["total_time"])
-        _usage.save()
+            _usage = MachineUsage(user=_user, device=_device, time_on=timestamp["time_on"], time_off=timestamp["time_off"], total_time=timestamp["total_time"])
+            _usage.save()
+    except Exception as e:
+        print ("Exception while handling device state change")
+        print ("device: {}".format(device))
+        print ("Exception: {}".format(e))
 
 def load_devices():
     print ("loading your devices")
@@ -51,7 +56,7 @@ def load_devices():
     devices = Device.objects.all()
 
     for device in devices:
-        _device = device_manager.Device(str(device))
+        _device = device_manager.Device(str(device), device.id)
         _device.initialize(pipe_a=eval(device.read_pipe), pipe_b=eval(device.write_pipe))
         _device.add_state_change_callback("tag", device_statechange_callback_handler)
         device_node_manager.add_device(hash(device), _device)
