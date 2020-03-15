@@ -39,8 +39,10 @@ def device_statechange_callback_handler(device):
             timestamp = device.get_timestamp()
 
             try:
-                _user = User.objects.filter(id__exact=device.get_user())[-1][0]
-            except:
+                _user = User.objects.filter(username__startswith=str(device.get_user()).strip())[0]
+            except Exception as e:
+                print(e)
+                print("_user =", device.get_user())
                 _user = User.objects.all()[0]
 
             _usage = MachineUsage(user=_user, device=_device, time_on=timestamp["time_on"], time_off=timestamp["time_off"], total_time=timestamp["total_time"])

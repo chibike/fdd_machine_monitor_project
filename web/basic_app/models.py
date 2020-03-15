@@ -35,13 +35,13 @@ class UserWrapper(User):
     @staticmethod
     def get_usage_metrics(user_reference, time_window=get_default_time_window_datetime()):
         usages = MachineUsage.objects.filter(user=user_reference).filter(device__state=True).filter(time_off__gte=time_window)
-        usages = [usage.total_time.seconds for usage in usages]
+        usages = [round(usage.total_time.seconds/3600.0,4) for usage in usages]
         total = sum(usages)
         count = max(len(usages), 1)
         return {
             "usages": usages,
             "total" : total,
-            "average" : total / count,
+            "average" : round(total / count,4),
             "count" : count
         }
 
@@ -78,13 +78,13 @@ class Device(models.Model):
 
     def get_usage_metrics(self, time_window=get_default_time_window_datetime()):
         usages = MachineUsage.objects.filter(device=self).filter(device__state=True).filter(time_off__gte=time_window)
-        usages = [usage.total_time.seconds for usage in usages]
+        usages = [round(usage.total_time.seconds/3600.0,4) for usage in usages]
         total = sum(usages)
         count = max(len(usages), 1)
         return {
             "usages" : usages,
             "total" : total,
-            "average" : total / count,
+            "average" : round(total / count,4),
             "count" : count
         }
 
@@ -221,7 +221,7 @@ class GoogleSheet(models.Model):
                 '''
                     Adds the column headers for the spread sheet
                 '''
-                sheet.insert_row(self.headers, 1)
+                #sheet.insert_row(self.headers, 1)
                 self.has_header = True
                 self.save()
 
