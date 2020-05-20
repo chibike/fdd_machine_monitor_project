@@ -21,7 +21,7 @@ google-api-python-client==1.5.5
 gspread==3.1.0
 h5py==2.7.0
 html5lib==0.999999999
-httplib2==0.13.0
+httplib2==0.18.0
 idna==2.7
 jdcal==1.0
 Jinja2==2.8
