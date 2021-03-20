@@ -24,7 +24,7 @@ html5lib==0.999999999
 httplib2==0.13.0
 idna==2.7
 jdcal==1.0
-Jinja2==2.8
+Jinja2==2.11.3
 joblib==0.10.4.dev0
 keyring==10.1
 keyrings.alt==1.3
